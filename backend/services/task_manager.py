@@ -42,6 +42,7 @@ class BackgroundTask:
         domain: Translation domain (tech, business, academic)
         source_lang: Source language code
         target_lang: Target language code
+        sync_to_notion: Whether to sync to Notion after completion
         created_at: Task creation timestamp
     """
     task_id: str
@@ -52,6 +53,7 @@ class BackgroundTask:
     domain: str = "tech"
     source_lang: str = "en"
     target_lang: str = "zh"
+    sync_to_notion: bool = False
     created_at: datetime = None
 
     def __post_init__(self):
@@ -289,6 +291,7 @@ class BackgroundTaskManager:
         domain: str = "tech",
         source_lang: str = "en",
         target_lang: str = "zh",
+        sync_to_notion: bool = False,
     ) -> str:
         """
         Fast submit task without URL fetching or chunking.
@@ -306,6 +309,7 @@ class BackgroundTaskManager:
             domain: Translation domain
             source_lang: Source language
             target_lang: Target language
+            sync_to_notion: Whether to sync to Notion after completion
 
         Returns:
             Task ID for tracking
@@ -338,6 +342,7 @@ class BackgroundTaskManager:
             domain=domain,
             source_lang=source_lang,
             target_lang=target_lang,
+            sync_to_notion=sync_to_notion,
         )
 
         # Add to pending set for cancellation support
@@ -351,7 +356,8 @@ class BackgroundTaskManager:
             f"Task submitted fast: {task_id}, "
             f"has_content={bool(content)}, "
             f"has_url={bool(url)}, "
-            f"domain={domain}"
+            f"domain={domain}, "
+            f"sync_to_notion={sync_to_notion}"
         )
 
         return task_id
@@ -577,7 +583,13 @@ class BackgroundTaskManager:
         # Note: status is already set to IN_PROGRESS by update_task_prepared()
 
         try:
-            self._translate_chunks(task_id, cache_task, task.domain)
+            self._translate_chunks(
+                task_id=task_id,
+                cache_task=cache_task,
+                domain=task.domain,
+                title=title,
+                sync_to_notion=task.sync_to_notion,
+            )
         except Exception as e:
             logger.error(f"Task {task_id} failed: {e}", exc_info=True)
             self._cache.mark_failed(task_id, str(e))
@@ -625,6 +637,8 @@ class BackgroundTaskManager:
         task_id: str,
         cache_task: TranslationTask,
         domain: str,
+        title: Optional[str] = None,
+        sync_to_notion: bool = False,
     ) -> None:
         """
         Translate all chunks for a task.
@@ -633,6 +647,8 @@ class BackgroundTaskManager:
             task_id: Task identifier
             cache_task: Cache task object
             domain: Translation domain
+            title: Optional title for Notion page
+            sync_to_notion: Whether to sync to Notion after completion
         """
         chunks = cache_task.chunks
         total_chunks = len(chunks)
@@ -681,6 +697,10 @@ class BackgroundTaskManager:
         # Mark task as completed
         self._cache.mark_completed(task_id)
         logger.info(f"Task {task_id} completed successfully")
+
+        # Sync to Notion if requested
+        if sync_to_notion:
+            self._sync_to_notion(task_id, title)
 
     def _execute_chunk_with_retry(
         self,
@@ -815,6 +835,78 @@ class BackgroundTaskManager:
             Delay in seconds
         """
         return float(2 ** retry_count)
+
+    def _sync_to_notion(self, task_id: str, title: Optional[str] = None) -> None:
+        """
+        Sync completed translation to Notion.
+
+        Args:
+            task_id: Task identifier
+            title: Optional title for Notion page
+        """
+        try:
+            from config.settings import get_config
+            from agent.tools.notion_publisher import NotionPublisher
+
+            config = get_config()
+
+            # Check Notion configuration
+            if not config.notion.api_key:
+                logger.warning(
+                    f"Task {task_id}: Notion sync skipped - API key not configured"
+                )
+                return
+
+            if not config.notion.parent_page_id:
+                logger.warning(
+                    f"Task {task_id}: Notion sync skipped - parent page ID not configured"
+                )
+                return
+
+            # Get task data
+            task = self._cache.get_task(task_id)
+            if not task:
+                logger.error(f"Task {task_id}: Notion sync failed - task not found")
+                return
+
+            if task.status != TaskStatus.COMPLETED:
+                logger.warning(
+                    f"Task {task_id}: Notion sync skipped - task not completed "
+                    f"(status: {task.status.value})"
+                )
+                return
+
+            # Prepare publisher
+            publisher = NotionPublisher(
+                api_key=config.notion.api_key,
+                parent_page_id=config.notion.parent_page_id,
+            )
+
+            # Use provided title or task title
+            page_title = title or task.title or "翻译结果"
+
+            # Publish to Notion
+            result = publisher.publish_markdown(
+                title=page_title,
+                content=task.partial_result,
+                source_url=task.source_url,
+                domain=task.domain,
+            )
+
+            if result.success:
+                logger.info(
+                    f"Task {task_id}: Notion sync successful - page_url={result.page_url}"
+                )
+            else:
+                logger.error(
+                    f"Task {task_id}: Notion sync failed - {result.error}"
+                )
+
+        except Exception as e:
+            logger.error(
+                f"Task {task_id}: Notion sync error - {e}",
+                exc_info=True
+            )
 
 
 # Singleton instance

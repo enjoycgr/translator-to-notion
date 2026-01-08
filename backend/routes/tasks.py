@@ -59,7 +59,8 @@ def submit_background_task():
         "source_url": "optional source URL",
         "domain": "tech" | "business" | "academic",
         "source_lang": "en",
-        "target_lang": "zh"
+        "target_lang": "zh",
+        "sync_to_notion": true           // optional, sync to Notion after completion
     }
 
     Response:
@@ -68,7 +69,8 @@ def submit_background_task():
         "data": {
             "task_id": "uuid",
             "status": "pending",
-            "created_at": "ISO timestamp"
+            "created_at": "ISO timestamp",
+            "sync_to_notion": true
         }
     }
     """
@@ -97,6 +99,7 @@ def submit_background_task():
         domain = data.get('domain', 'tech')
         source_lang = data.get('source_lang', 'en')
         target_lang = data.get('target_lang', 'zh')
+        sync_to_notion = data.get('sync_to_notion', False)
 
         # Validate domain
         valid_domains = ['tech', 'business', 'academic']
@@ -118,15 +121,17 @@ def submit_background_task():
             domain=domain,
             source_lang=source_lang,
             target_lang=target_lang,
+            sync_to_notion=sync_to_notion,
         )
 
-        logger.info(f"Background task submitted: {task_id}")
+        logger.info(f"Background task submitted: {task_id}, sync_to_notion={sync_to_notion}")
 
         # Return immediately
         return jsonify(success_response({
             "task_id": task_id,
             "status": "pending",
             "created_at": datetime.now().isoformat(),
+            "sync_to_notion": sync_to_notion,
         })), 201
 
     except Exception as e:
