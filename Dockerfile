@@ -31,11 +31,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     gosu \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && mv /root/.local/bin/uv /usr/local/bin/uv \
+    && mv /root/.local/bin/uvx /usr/local/bin/uvx \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Add UV to PATH
-ENV PATH="/root/.local/bin:$PATH"
 
 # Copy dependency files first (for layer caching)
 COPY pyproject.toml uv.lock ./
