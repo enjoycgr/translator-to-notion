@@ -26,9 +26,10 @@ FROM python:3.13-slim AS backend
 
 WORKDIR /app
 
-# Install system dependencies and UV
+# Install system dependencies, gosu (for user switching), and UV
 RUN apt-get update && apt-get install -y \
     curl \
+    gosu \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -53,12 +54,12 @@ COPY main.py ./
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Create data directories for task persistence
-RUN mkdir -p /app/data/results
-
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Expose application port
 EXPOSE 5000
@@ -66,6 +67,9 @@ EXPOSE 5000
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/api/health || exit 1
+
+# Entrypoint handles directory permissions and user switching
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Run the application using UV (uses venv created by uv sync)
 CMD ["uv", "run", "python", "main.py"]
