@@ -5,10 +5,24 @@ import { TranslateForm } from '@/components/TranslateForm';
 import { ResultDisplay } from '@/components/ResultDisplay';
 import { NotionSyncButton } from '@/components/NotionSyncButton';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { Settings, Key, Languages, AlertCircle, X, Check, ExternalLink, Loader2 } from 'lucide-react';
+import { HomePage } from '@/pages/HomePage';
+import { TaskListPage } from '@/pages/TaskListPage';
+import { TaskDetailPage } from '@/pages/TaskDetailPage';
+import { Settings, Key, Languages, AlertCircle, X, Check, ExternalLink, Loader2, ListTodo } from 'lucide-react';
+
+// Page types for navigation
+type PageType = 'home' | 'stream' | 'tasks' | 'task-detail';
+
+interface PageState {
+  type: PageType;
+  taskId?: string;
+}
 
 function App() {
-  // Translation state
+  // Current page state
+  const [page, setPage] = useState<PageState>({ type: 'home' });
+
+  // Translation state (for stream mode)
   const [translation, setTranslation] = useState<TranslationState>({
     isLoading: false,
     isStreaming: false,
@@ -30,7 +44,13 @@ function App() {
   const [showSettings, setShowSettings] = useState(!hasAccessKey());
   const [accessKeyInput, setAccessKeyInput] = useState(getAccessKey());
 
-  // Handle translation submission
+  // Navigation handlers
+  const navigateToHome = () => setPage({ type: 'home' });
+  const navigateToStream = () => setPage({ type: 'stream' });
+  const navigateToTasks = () => setPage({ type: 'tasks' });
+  const navigateToTaskDetail = (taskId: string) => setPage({ type: 'task-detail', taskId });
+
+  // Handle translation submission (stream mode)
   const handleTranslate = useCallback(
     async (data: {
       content?: string;
@@ -147,11 +167,170 @@ function App() {
     },
     []
   );
+
   // Handle access key save
   const handleSaveAccessKey = () => {
     if (accessKeyInput.trim()) {
       setAccessKey(accessKeyInput.trim());
       setShowSettings(false);
+    }
+  };
+
+  // Render current page content
+  const renderPageContent = () => {
+    switch (page.type) {
+      case 'home':
+        return (
+          <HomePage
+            onSelectTask={navigateToTaskDetail}
+            onViewAllTasks={navigateToTasks}
+          />
+        );
+
+      case 'tasks':
+        return (
+          <TaskListPage
+            onSelectTask={navigateToTaskDetail}
+            onBack={navigateToHome}
+          />
+        );
+
+      case 'task-detail':
+        return page.taskId ? (
+          <TaskDetailPage
+            taskId={page.taskId}
+            onBack={navigateToTasks}
+          />
+        ) : null;
+
+      case 'stream':
+        return (
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Left: Form */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <TranslateForm
+                  onSubmit={handleTranslate}
+                  isLoading={translation.isLoading}
+                  mode="stream"
+                />
+              </div>
+            </div>
+
+            {/* Right: Result */}
+            <div className="space-y-6">
+              {translation.error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium text-red-800">翻译出错</h3>
+                    <p className="text-sm text-red-600 mt-1">
+                      {translation.error}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {translation.isLoading && !translation.translatedContent && (
+                <div className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center justify-center">
+                  <LoadingSpinner size="lg" />
+                  <p className="mt-4 text-gray-600">正在获取内容并翻译...</p>
+                </div>
+              )}
+
+              {translation.translatedContent && (
+                <>
+                  <ResultDisplay
+                    originalContent={translation.originalContent}
+                    translatedContent={translation.translatedContent}
+                    title={translation.title}
+                    sourceUrl={translation.sourceUrl}
+                    domain={translation.domain}
+                    cost={translation.cost}
+                    isStreaming={translation.isStreaming}
+                  />
+
+                  {translation.taskId && !translation.isLoading && (
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                      <h3 className="font-medium text-gray-900 mb-4">
+                        同步到 Notion
+                      </h3>
+
+                      {/* 自动同步中 */}
+                      {notionSync.isSyncing && (
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>正在同步到 Notion...</span>
+                        </div>
+                      )}
+
+                      {/* 自动同步成功 */}
+                      {notionSync.syncResult?.success && (
+                        <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-green-700">
+                            <Check className="w-5 h-5" />
+                            <span className="font-medium">已自动同步到 Notion</span>
+                          </div>
+                          <a
+                            href={notionSync.syncResult.pageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            打开页面
+                          </a>
+                        </div>
+                      )}
+
+                      {/* 自动同步失败 */}
+                      {notionSync.syncResult && !notionSync.syncResult.success && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-red-700 mb-2">
+                            <AlertCircle className="w-5 h-5" />
+                            <span className="font-medium">自动同步失败</span>
+                          </div>
+                          <p className="text-sm text-red-600 mb-3">{notionSync.syncResult.error}</p>
+                          <NotionSyncButton
+                            taskId={translation.taskId}
+                            title={translation.title}
+                            disabled={translation.isLoading}
+                          />
+                        </div>
+                      )}
+
+                      {/* 未选择自动同步 - 显示手动按钮 */}
+                      {!notionSync.shouldSync && !notionSync.isSyncing && !notionSync.syncResult && (
+                        <NotionSyncButton
+                          taskId={translation.taskId}
+                          title={translation.title}
+                          disabled={translation.isLoading}
+                        />
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {!translation.isLoading && !translation.translatedContent && (
+                <div className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center justify-center text-center">
+                  <div className="p-4 bg-gray-100 rounded-full mb-4">
+                    <Languages className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                    准备翻译
+                  </h3>
+                  <p className="text-sm text-gray-500 max-w-xs">
+                    在左侧输入内容或 URL，选择翻译领域后点击"开始翻译"
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -161,7 +340,10 @@ function App() {
       <header className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={navigateToHome}
+            >
               <div className="p-2 bg-primary-100 rounded-lg">
                 <Languages className="w-6 h-6 text-primary-600" />
               </div>
@@ -174,147 +356,65 @@ function App() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title="设置"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+
+            <div className="flex items-center gap-2">
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center gap-1 mr-4">
+                <button
+                  onClick={navigateToHome}
+                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                    page.type === 'home'
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  后台任务
+                </button>
+                <button
+                  onClick={navigateToStream}
+                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                    page.type === 'stream'
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  实时翻译
+                </button>
+                <button
+                  onClick={navigateToTasks}
+                  className={`px-3 py-2 text-sm rounded-lg transition-colors flex items-center gap-1 ${
+                    page.type === 'tasks' || page.type === 'task-detail'
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <ListTodo className="w-4 h-4" />
+                  任务列表
+                </button>
+              </nav>
+
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="设置"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Form */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <TranslateForm
-                onSubmit={handleTranslate}
-                isLoading={translation.isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Right: Result */}
-          <div className="space-y-6">
-            {translation.error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-medium text-red-800">翻译出错</h3>
-                  <p className="text-sm text-red-600 mt-1">
-                    {translation.error}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {translation.isLoading && !translation.translatedContent && (
-              <div className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center justify-center">
-                <LoadingSpinner size="lg" />
-                <p className="mt-4 text-gray-600">正在获取内容并翻译...</p>
-              </div>
-            )}
-
-            {translation.translatedContent && (
-              <>
-                <ResultDisplay
-                  originalContent={translation.originalContent}
-                  translatedContent={translation.translatedContent}
-                  title={translation.title}
-                  sourceUrl={translation.sourceUrl}
-                  domain={translation.domain}
-                  cost={translation.cost}
-                  isStreaming={translation.isStreaming}
-                />
-
-                {translation.taskId && !translation.isLoading && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="font-medium text-gray-900 mb-4">
-                      同步到 Notion
-                    </h3>
-
-                    {/* 自动同步中 */}
-                    {notionSync.isSyncing && (
-                      <div className="flex items-center gap-3 text-gray-600">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>正在同步到 Notion...</span>
-                      </div>
-                    )}
-
-                    {/* 自动同步成功 */}
-                    {notionSync.syncResult?.success && (
-                      <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-green-700">
-                          <Check className="w-5 h-5" />
-                          <span className="font-medium">已自动同步到 Notion</span>
-                        </div>
-                        <a
-                          href={notionSync.syncResult.pageUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          打开页面
-                        </a>
-                      </div>
-                    )}
-
-                    {/* 自动同步失败 */}
-                    {notionSync.syncResult && !notionSync.syncResult.success && (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-red-700 mb-2">
-                          <AlertCircle className="w-5 h-5" />
-                          <span className="font-medium">自动同步失败</span>
-                        </div>
-                        <p className="text-sm text-red-600 mb-3">{notionSync.syncResult.error}</p>
-                        <NotionSyncButton
-                          taskId={translation.taskId}
-                          title={translation.title}
-                          disabled={translation.isLoading}
-                        />
-                      </div>
-                    )}
-
-                    {/* 未选择自动同步 - 显示手动按钮 */}
-                    {!notionSync.shouldSync && !notionSync.isSyncing && !notionSync.syncResult && (
-                      <NotionSyncButton
-                        taskId={translation.taskId}
-                        title={translation.title}
-                        disabled={translation.isLoading}
-                      />
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-
-            {!translation.isLoading && !translation.translatedContent && (
-              <div className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center justify-center text-center">
-                <div className="p-4 bg-gray-100 rounded-full mb-4">
-                  <Languages className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-700 mb-2">
-                  准备翻译
-                </h3>
-                <p className="text-sm text-gray-500 max-w-xs">
-                  在左侧输入内容或 URL，选择翻译领域后点击"开始翻译"
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        {renderPageContent()}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-gray-200 mt-auto">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <p className="text-center text-sm text-gray-500">
-            Translation Agent System v1.0.0 · Powered by Claude AI
+            Translation Agent System v1.1.0 · Powered by Claude AI
           </p>
         </div>
       </footer>

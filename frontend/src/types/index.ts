@@ -30,7 +30,7 @@ export const DOMAINS: DomainInfo[] = [
 ];
 
 // Task status types
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+export type TaskStatus = 'pending' | 'preparing' | 'in_progress' | 'completed' | 'failed';
 
 // API Request types
 export interface TranslateRequest {
@@ -44,6 +44,17 @@ export interface TranslateRequest {
 export interface NotionSyncRequest {
   task_id: string;
   title?: string;
+}
+
+// Background task request
+export interface BackgroundTaskRequest {
+  content?: string;
+  url?: string;
+  title?: string;
+  source_url?: string;
+  domain: Domain;
+  source_lang?: string;
+  target_lang?: string;
 }
 
 // API Response types
@@ -135,3 +146,64 @@ export interface NotionState {
 
 // Input mode type
 export type InputMode = 'text' | 'url';
+
+// ============================================================
+// Background Task Types (for task management)
+// ============================================================
+
+/**
+ * Task list item (lightweight, for listing)
+ */
+export interface TaskListItem {
+  task_id: string;
+  title: string;
+  status: TaskStatus;
+  progress: number;
+  domain: string;
+  created_at: string;
+}
+
+/**
+ * Task list response with pagination
+ */
+export interface TaskListResponse {
+  tasks: TaskListItem[];
+  total: number;
+  has_more: boolean;
+}
+
+/**
+ * Task detail (full information)
+ */
+export interface TaskDetail extends TaskListItem {
+  original_content: string;
+  source_url?: string;
+  updated_at: string;
+  total_chunks: number;
+  completed_chunks: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  result?: string;           // only for completed status
+  partial_result?: string;   // for in_progress status
+  error_message?: string;    // only for failed status
+  status_message?: string;   // for preparing status
+  completed_at?: string;
+}
+
+/**
+ * Background task submission response
+ */
+export interface BackgroundTaskResponse {
+  task_id: string;
+  status: TaskStatus;
+  created_at: string;
+}
+
+/**
+ * Task stats response
+ */
+export interface TaskStatsResponse {
+  total_tasks: number;
+  by_status: Record<TaskStatus, number>;
+  queue_size: number;
+}

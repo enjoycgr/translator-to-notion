@@ -45,10 +45,11 @@ services:
       # ===== Agent Configuration =====
       - AGENT_MODEL=${AGENT_MODEL:-claude-opus-4-5-20251101}
       - AGENT_TIMEOUT=${AGENT_TIMEOUT:-300}
-
     volumes:
       # Mount config file for runtime customization (read-only)
       - ./config/config.yaml:/app/config/config.yaml:ro
+      # Mount data directory for task persistence
+      - ./data:/app/data
 
     restart: unless-stopped
 

@@ -53,6 +53,9 @@ COPY main.py ./
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
+# Create data directories for task persistence
+RUN mkdir -p /app/data/results
+
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser

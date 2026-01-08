@@ -11,6 +11,10 @@ import type {
   NotionSyncResponseData,
   HealthResponse,
   StreamChunk,
+  BackgroundTaskRequest,
+  BackgroundTaskResponse,
+  TaskListResponse,
+  TaskDetail,
 } from '@/types';
 
 // API configuration
@@ -225,4 +229,86 @@ export async function testNotionConnection(): Promise<ApiResponse<{ message: str
   });
 
   return handleResponse(response);
+}
+
+// ============================================================
+// Background Task Management APIs
+// ============================================================
+
+/**
+ * Submit a background translation task.
+ * Returns immediately with task_id, translation happens in background.
+ */
+export async function submitBackgroundTask(
+  request: BackgroundTaskRequest
+): Promise<ApiResponse<BackgroundTaskResponse>> {
+  const response = await fetch(`${API_BASE_URL}/translate/background`, {
+    method: 'POST',
+    headers: buildHeaders(),
+    body: JSON.stringify(request),
+  });
+
+  return handleResponse<BackgroundTaskResponse>(response);
+}
+
+/**
+ * Get paginated list of tasks.
+ */
+export async function getTaskList(
+  offset: number = 0,
+  limit: number = 20
+): Promise<ApiResponse<TaskListResponse>> {
+  const params = new URLSearchParams({
+    offset: offset.toString(),
+    limit: limit.toString(),
+  });
+
+  const response = await fetch(`${API_BASE_URL}/tasks?${params}`, {
+    method: 'GET',
+    headers: buildHeaders(),
+  });
+
+  return handleResponse<TaskListResponse>(response);
+}
+
+/**
+ * Get task detail with translation result.
+ */
+export async function getTaskDetail(
+  taskId: string
+): Promise<ApiResponse<TaskDetail>> {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+    method: 'GET',
+    headers: buildHeaders(),
+  });
+
+  return handleResponse<TaskDetail>(response);
+}
+
+/**
+ * Delete a task.
+ */
+export async function deleteTask(
+  taskId: string
+): Promise<ApiResponse<{ deleted: boolean }>> {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+    method: 'DELETE',
+    headers: buildHeaders(),
+  });
+
+  return handleResponse<{ deleted: boolean }>(response);
+}
+
+/**
+ * Retry a failed task.
+ */
+export async function retryTask(
+  taskId: string
+): Promise<ApiResponse<{ task_id: string; status: string }>> {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/retry`, {
+    method: 'POST',
+    headers: buildHeaders(),
+  });
+
+  return handleResponse<{ task_id: string; status: string }>(response);
 }

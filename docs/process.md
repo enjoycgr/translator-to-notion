@@ -1,1356 +1,679 @@
-# 翻译代理系统执行计划
+# 后台翻译功能 执行计划
 
 ## 项目信息
-- **项目名称**: 翻译代理系统 (Translation Agent)
-- **技术栈**: Claude Agent SDK + Flask + React (Vite/TypeScript/Tailwind) + Notion API + Docker
-- **预计工期**: 10-12 天
-- **当前状态**: 0% (未开始)
-- **最后更新**: 2026-01-06
+- **项目名称**: 后台翻译功能实施
+- **技术栈**: Python Flask + React TypeScript + Docker
+- **预计工期**: 5-7 天
+- **当前状态**: ✅ 100% 完成
+- **最后更新**: 2026-01-08
+- **源文档**: [background-translation-plan.md](./background-translation-plan.md)
 
 ## 状态说明
 ⬜ 未开始 | 🔄 进行中 | ✅ 已完成 | ⚠️ 阻塞中 | ❌ 已取消
 
 ## 项目里程碑
-- [ ] Phase 1: 项目初始化 (⬜)
-- [ ] Phase 2: Agent 核心开发 (⬜)
-- [ ] Phase 3: Flask 后端开发 (⬜)
-- [ ] Phase 4: React 前端开发 (⬜)
-- [ ] Phase 5: Docker 化 (⬜)
-- [ ] Phase 6: 集成测试 (⬜)
+- [x] Phase 1: 后端基础设施 (✅ 已完成)
+- [x] Phase 2: API 路由 (✅ 已完成)
+- [x] Phase 3: 前端改造 (✅ 已完成)
+- [x] Phase 4: Docker 配置 (✅ 已完成)
 
 ---
 
-## Phase 1: 项目初始化 (预计 1 天)
+## Phase 1: 后端基础设施
 
-**整体状态**: ⬜ 未开始
+**整体状态**: ✅ 已完成
 **依赖项**: 无
-**阶段目标**: 搭建项目基础结构，配置开发环境，建立配置管理机制
+**阶段目标**: 搭建后台任务处理的核心服务，包括任务管理器、持久化服务和缓存扩展
 
-### 1.1 创建目录结构
+### 1.1 创建数据目录
 
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 高
 **预计时间**: 0.5 小时
 
 **任务描述**:
-创建项目的完整目录结构，包括所有模块目录和 `__init__.py` 文件。
+创建数据存储目录结构，用于持久化任务数据和翻译结果
 
 **实现要点**:
-- [ ] 创建 `config/` 目录及 `__init__.py`
-- [ ] 创建 `backend/` 目录结构 (routes, middleware, services, schemas)
-- [ ] 创建 `agent/` 目录结构 (tools, prompts)
-- [ ] 创建 `frontend/` 基础目录
-- [ ] 所有 Python 包添加 `__init__.py`
+- [x] 创建 `data/` 目录
+- [x] 创建 `data/results/` 子目录
+- [x] 添加 `.gitkeep` 文件
 
 **验收标准**:
-- ✅ 目录结构与 plan.md 中定义一致
-- ✅ 所有 Python 目录包含 `__init__.py`
-- ✅ 可以正常导入各模块
-
-**技术参考**:
-- 参考文件: plan.md 第 39-106 行目录结构
-
-**依赖项**:
-- 无
-
-**潜在风险**:
-- ⚠️ 无明显风险
+- ✅ `data/` 目录存在
+- ✅ `data/results/` 目录存在
+- ✅ `.gitkeep` 文件已添加，目录可被 git 跟踪
 
 ---
 
-### 1.2 创建 requirements.txt
+### 1.2 创建 BackgroundTaskManager
 
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 0.5 小时
-
-**任务描述**:
-创建 Python 依赖清单文件，包含所有后端和 Agent 所需的库。
-
-**实现要点**:
-- [ ] 添加 claude-agent-sdk
-- [ ] 添加 Flask 相关依赖 (flask, flask-cors)
-- [ ] 添加 Notion 客户端 (notion-client)
-- [ ] 添加网页抓取依赖 (beautifulsoup4, html2text, requests)
-- [ ] 添加工具库 (pyyaml, python-dotenv, tiktoken, aiohttp)
-
-**验收标准**:
-- ✅ `pip install -r requirements.txt` 成功执行
-- ✅ 所有依赖版本明确指定
-- ✅ 无版本冲突
-
-**技术参考**:
-- 参考文件: plan.md 第 284-297 行依赖清单
-
-**依赖项**:
-- 任务 1.1 完成
-
-**潜在风险**:
-- ⚠️ claude-agent-sdk 版本可能需要确认最新稳定版
-
----
-
-### 1.3 创建环境配置文件
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 0.5 小时
-
-**任务描述**:
-创建 `.gitignore` 和 `.env.example` 文件，确保敏感信息不会被提交。
-
-**实现要点**:
-- [ ] 创建 `.gitignore`，排除 `__pycache__`、`.env`、`node_modules` 等
-- [ ] 创建 `.env.example`，包含必要的环境变量模板
-- [ ] 添加 ANTHROPIC_API_KEY 占位符
-- [ ] 添加 NOTION_API_KEY 占位符
-
-**验收标准**:
-- ✅ `.gitignore` 覆盖所有敏感和临时文件
-- ✅ `.env.example` 包含所有必要的环境变量说明
-- ✅ 可以通过复制 `.env.example` 快速创建 `.env`
-
-**依赖项**:
-- 任务 1.1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 1.4 实现配置加载器 (settings.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 2 小时
-
-**任务描述**:
-实现类型安全的配置加载器，支持 YAML 配置文件和环境变量覆盖。
-
-**实现要点**:
-- [ ] 使用 dataclass 定义配置类型
-- [ ] 实现 YAML 配置文件加载
-- [ ] 支持环境变量覆盖机制
-- [ ] 定义翻译配置 (domains, chunking, retry)
-- [ ] 定义缓存配置 (type, ttl, max_entries)
-- [ ] 定义 Notion 配置 (api_key, parent_page_id, metadata)
-- [ ] 定义认证配置 (access_keys)
-- [ ] 定义 Agent 配置 (model, max_turns, timeout)
-- [ ] 定义服务器配置 (host, port, debug)
-
-**验收标准**:
-- ✅ 配置类有完整的类型注解
-- ✅ 可以从 YAML 文件加载配置
-- ✅ 环境变量可以覆盖配置文件的值
-- ✅ 配置缺失时有明确的错误提示
-
-**技术参考**:
-- 参考文件: plan.md 第 266-272 行配置管理说明
-- 参考代码: plan.md 第 311-374 行配置模板
-
-**依赖项**:
-- 任务 1.1, 1.2 完成
-
-**潜在风险**:
-- ⚠️ 配置结构可能需要根据实际开发调整
-
----
-
-### 1.5 创建配置模板 (config.yaml)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 1 小时
-
-**任务描述**:
-创建主配置文件模板，包含所有可配置项的默认值。
-
-**实现要点**:
-- [ ] 定义翻译方向配置 (source: en, target: zh-CN)
-- [ ] 定义领域模板 (tech, business, academic)
-- [ ] 定义分段策略 (semantic, max_chunk_tokens: 8000)
-- [ ] 定义重试策略 (max_attempts, retry_on, backoff)
-- [ ] 定义缓存配置 (memory, ttl: 30min)
-- [ ] 定义 Notion 配置 (占位符)
-- [ ] 定义认证配置 (示例 access_key)
-- [ ] 定义 Agent 配置 (model, timeout)
-- [ ] 定义服务器配置 (host, port)
-
-**验收标准**:
-- ✅ 配置文件格式正确，可被 settings.py 正确加载
-- ✅ 所有配置项有合理的默认值
-- ✅ 敏感信息使用占位符
-
-**技术参考**:
-- 参考代码: plan.md 第 311-374 行完整配置模板
-
-**依赖项**:
-- 任务 1.4 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-## Phase 2: Agent 核心开发 (预计 2-3 天)
-
-**整体状态**: ⬜ 未开始
-**依赖项**: Phase 1 完成
-**阶段目标**: 实现翻译 Agent 核心逻辑，包括工具定义和提示词模板
-
-### 2.1 实现网页内容获取工具 (web_fetcher.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 3 小时
-
-**任务描述**:
-实现静态网页内容获取工具，使用 requests + BeautifulSoup 抓取并提取文章内容。
-
-**实现要点**:
-- [ ] 使用 requests 获取网页 HTML
-- [ ] 使用 BeautifulSoup 解析 HTML
-- [ ] 实现文章主体内容提取逻辑
-- [ ] 使用 html2text 转换为 Markdown
-- [ ] 处理常见的文章结构 (article, main, content 等)
-- [ ] 提取文章标题
-- [ ] 处理请求异常和超时
-
-**验收标准**:
-- ✅ 可以成功抓取常见博客/新闻网站内容
-- ✅ 正确提取文章标题和正文
-- ✅ 输出格式为清晰的 Markdown
-- ✅ 异常情况有明确的错误信息
-
-**技术参考**:
-- 参考文件: plan.md 第 71 行工具定义
-
-**依赖项**:
-- Phase 1 完成
-
-**潜在风险**:
-- ⚠️ 不同网站结构差异大，可能需要多种提取策略
-- ⚠️ 部分网站可能有反爬虫机制
-
----
-
-### 2.2 实现基础翻译提示词 (translation_prompts.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 2 小时
-
-**任务描述**:
-定义翻译 Agent 的基础提示词模板，确保翻译质量和一致性。
-
-**实现要点**:
-- [ ] 定义系统提示词 (角色、能力、约束)
-- [ ] 定义翻译任务提示词模板
-- [ ] 定义段落交替输出格式说明
-- [ ] 支持变量替换 (原文内容、领域等)
-- [ ] 定义翻译质量要求
-
-**验收标准**:
-- ✅ 提示词清晰表达翻译要求
-- ✅ 支持动态参数注入
-- ✅ 翻译结果格式符合段落交替要求
-
-**技术参考**:
-- 参考文件: plan.md 第 75-76 行提示词模块
-
-**依赖项**:
-- Phase 1 完成
-
-**潜在风险**:
-- ⚠️ 提示词可能需要多次迭代优化
-
----
-
-### 2.3 实现领域专用提示词 (domain_prompts.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 中
-**预计时间**: 2 小时
-
-**任务描述**:
-实现三个预设领域的专用提示词：技术/编程、商务/金融、学术研究。
-
-**实现要点**:
-- [ ] 定义 DOMAIN_PROMPTS 字典结构
-- [ ] 实现 tech 领域提示词 (保留代码块、技术术语)
-- [ ] 实现 business 领域提示词 (正式商务用语、金融术语)
-- [ ] 实现 academic 领域提示词 (学术严谨性、引用格式)
-- [ ] 实现 get_domain_prompt(domain) 函数
-
-**验收标准**:
-- ✅ 三个领域提示词定义完整
-- ✅ get_domain_prompt 函数正确返回对应提示词
-- ✅ 未知领域返回空字符串
-
-**技术参考**:
-- 参考代码: plan.md 第 533-571 行领域提示词示例
-
-**依赖项**:
-- 任务 2.2 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 2.4 实现 Notion 发布工具 (notion_publisher.py)
-
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 高
 **预计时间**: 4 小时
+**文件**: `backend/services/task_manager.py`
 
 **任务描述**:
-实现 Notion 页面发布工具，支持段落交替双语格式和元信息添加。
+创建后台任务管理器，负责维护任务队列、单工作线程串行处理任务、与 CacheService 协作更新状态
 
 **实现要点**:
-- [ ] 初始化 Notion Client
-- [ ] 实现 publish() 主方法
-- [ ] 实现 _build_interleaved_blocks() 构建段落交替格式
-- [ ] 原文使用灰色引用块 (quote)
-- [ ] 译文使用普通段落
-- [ ] 实现元信息添加 (原文链接、翻译领域)
-- [ ] 实现辅助方法 (_create_text_block, _create_divider)
-- [ ] 处理 Notion API 异常
+- [x] 定义配置常量 `MAX_RETRY_COUNT = 3`、`CHUNK_TIMEOUT_SECONDS = 300`
+- [x] 实现 `_task_queue: queue.Queue` 任务队列（线程安全）
+- [x] 实现单工作线程 `_worker: threading.Thread`
+- [x] 实现 `submit_task(task) -> str` 提交任务方法
+- [x] 实现 `retry_task(task_id) -> bool` 手动重试方法
+- [x] 实现 `cancel_task(task_id) -> bool` 取消排队任务方法
+- [x] 实现 `shutdown()` 优雅关闭方法
+- [x] 实现 `_worker_loop()` 工作线程主循环
+- [x] 实现 `_execute_task(task)` 执行单个任务
+- [x] 实现 `_execute_chunk_with_retry(chunk, task_id)` 带重试的 chunk 执行
+- [x] 实现 `_get_retry_delay(retry_count)` 指数退避算法（1s, 2s, 4s）
 
 **验收标准**:
-- ✅ 可以成功创建 Notion 页面
-- ✅ 页面格式为段落交替 (原文引用 + 译文段落)
-- ✅ 元信息正确显示在页面顶部
-- ✅ 返回正确的页面 URL
+- ✅ 任务提交后返回 task_id
+- ✅ 工作线程串行执行任务
+- ✅ chunk 失败时自动重试最多 3 次
+- ✅ 重试使用指数退避策略
+- ✅ 重试耗尽后标记任务为 `failed`
+- ✅ 支持优雅关闭，等待当前任务完成
 
 **技术参考**:
-- 参考代码: plan.md 第 573-646 行 NotionPublisher 示例
-- 参考文件: plan.md 第 240-246 行工具说明
+- 重试间隔: `2 ** retry_count` (0→1s, 1→2s, 2→4s)
+- chunk 超时: 5 分钟
+- 参考 plan.md 第 1.2 节
 
 **依赖项**:
-- Phase 1 完成
-- 需要有效的 Notion API Key 和 Parent Page ID 进行测试
-
-**潜在风险**:
-- ⚠️ Notion API 有请求限制，需要考虑大文章分批创建
-- ⚠️ Block 内容长度有限制 (2000 字符)
+- 依赖 1.1 数据目录创建完成
+- 依赖 CacheService 已存在
 
 ---
 
-### 2.5 实现翻译 Agent 主逻辑 (translator_agent.py)
+### 1.3 创建 TaskPersistenceService
 
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 高
-**预计时间**: 6 小时
+**预计时间**: 3 小时
+**文件**: `backend/services/task_persistence.py`
 
 **任务描述**:
-实现翻译 Agent 核心类，整合工具注册、提示词模板和翻译执行流程。
+创建任务持久化服务，负责定时快照、状态变更持久化、服务启动恢复和过期任务清理
 
 **实现要点**:
-- [ ] 定义 TranslatorAgent 类
-- [ ] 实现 __init__ 初始化配置
-- [ ] 实现 _setup_tools() 工具注册
-- [ ] 注册 publish_to_notion 工具
-- [ ] 注册 fetch_article 工具
-- [ ] 创建 MCP Server
-- [ ] 实现 translate() 主方法
-- [ ] 支持 content 或 url 输入
-- [ ] 支持 domain 领域选择
-- [ ] 实现 Claude SDK 调用逻辑
-- [ ] 实现流式响应处理
-- [ ] 实现长文分段翻译协调
+- [x] 实现每 30 秒快照到 `data/tasks.json`
+- [x] 实现任务状态变更时立即持久化
+- [x] 实现启动时从文件恢复未完成任务
+- [x] 实现 `pending` 任务恢复：保持 pending，重新加入队列
+- [x] 实现 `in_progress` 任务恢复：重置为 pending，重新排队
+- [x] 实现过期任务清理（7 天以上的 completed/failed 任务）
+- [x] 实现服务启动时清理过期任务
+- [x] 实现翻译结果写入独立文件 `data/results/{task_id}.txt`
+
+**数据结构**:
+```json
+{
+  "version": 1,
+  "last_updated": "ISO时间",
+  "tasks": {
+    "task-id": {
+      "task_id": "...",
+      "status": "pending|in_progress|completed|failed",
+      "progress": 0-100,
+      "original_content": "...",
+      "total_chunks": 10,
+      "completed_chunks": 5,
+      "error_message": null,
+      "created_at": "ISO时间",
+      "updated_at": "ISO时间",
+      "result_file": "results/{task_id}.txt"
+    }
+  }
+}
+```
 
 **验收标准**:
-- ✅ Agent 可以正确初始化并注册工具
-- ✅ 可以翻译直接输入的文本内容
-- ✅ 可以通过 URL 获取并翻译内容
-- ✅ 翻译结果符合段落交替格式
-- ✅ 支持三个预设领域
-
-**技术参考**:
-- 参考代码: plan.md 第 380-422 行 TranslatorAgent 示例
-- 参考文件: plan.md 第 233-239 行 Agent 说明
+- ✅ 每 30 秒自动保存快照
+- ✅ 状态变更时立即持久化
+- ✅ 服务重启后能恢复未完成任务
+- ✅ in_progress 任务重启后重置为 pending
+- ✅ 7 天以上的已完成/失败任务被清理
+- ✅ 翻译结果存储在独立文件中
 
 **依赖项**:
-- 任务 2.1, 2.2, 2.3, 2.4 完成
-
-**潜在风险**:
-- ⚠️ Claude Agent SDK API 可能与示例代码有差异，需参考最新文档
-- ⚠️ 长文分段需要与 chunking_service 协调
+- 依赖 1.1 数据目录创建完成
 
 ---
 
-## Phase 3: Flask 后端开发 (预计 3 天)
+### 1.4 扩展 CacheService
 
-**整体状态**: ⬜ 未开始
-**依赖项**: Phase 2 完成
-**阶段目标**: 实现完整的 Flask API 后端，包括认证、翻译、断点续传和 Notion 同步
-
-### 3.1 实现 Access Key 验证中间件 (auth.py)
-
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 高
-**预计时间**: 1 小时
+**预计时间**: 2 小时
+**文件**: `backend/services/cache_service.py`
 
 **任务描述**:
-实现基于 Access Key 的 API 认证中间件。
+扩展现有的 CacheService，添加批量查询、恢复和文件操作方法
 
 **实现要点**:
-- [ ] 创建 require_access_key 装饰器
-- [ ] 从请求头 X-Access-Key 获取密钥
-- [ ] 验证密钥是否在配置的 access_keys 列表中
-- [ ] 缺失密钥返回 401 + "Missing Access Key"
-- [ ] 无效密钥返回 401 + "Invalid Access Key"
+- [x] 添加 `get_all_tasks()` 方法用于持久化
+- [x] 添加 `restore_tasks(tasks_dict)` 方法用于恢复
+- [x] 添加 `get_task_metadata(task_id)` 方法（不含结果）
+- [x] 添加 `get_tasks_list(offset, limit)` 方法用于分页列表
+- [x] 添加 `set_task_status(task_id, status)` 方法
+- [x] 添加 `delete_task(task_id)` 方法
+- [x] 添加 `get_stats()` 方法用于统计
 
 **验收标准**:
-- ✅ 有效密钥可以通过验证
-- ✅ 无效/缺失密钥返回 401 错误
-- ✅ 错误信息清晰明确
-
-**技术参考**:
-- 参考代码: plan.md 第 649-666 行中间件示例
+- ✅ `get_all_tasks()` 返回所有任务的字典
+- ✅ `restore_tasks()` 能从字典恢复任务到内存
+- ✅ `get_task_metadata()` 返回任务元数据（不含翻译结果）
+- ✅ `get_tasks_list()` 支持分页和筛选
+- ✅ `set_task_status()` 能更新任务状态
+- ✅ `delete_task()` 能删除任务
+- ✅ `get_stats()` 返回任务统计信息
 
 **依赖项**:
-- Phase 1 配置加载器完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
+- 依赖 1.1 数据目录创建完成
 
 ---
 
-### 3.2 实现数据模型 (translate_schema.py)
+## Phase 2: API 路由
 
-**状态**: ⬜ 未开始
+**整体状态**: ✅ 已完成
+**依赖项**: Phase 1 核心服务完成
+**阶段目标**: 创建任务管理的 RESTful API 接口
+
+### 2.1 创建任务管理路由
+
+**状态**: ✅ 已完成
+**优先级**: 高
+**预计时间**: 3 小时
+**文件**: `backend/routes/tasks.py`
+
+**任务描述**:
+创建 6 个 API 接口用于任务管理
+
+**实现要点**:
+
+**接口 1: POST `/api/translate/background`**
+- [x] 接收翻译请求参数（content, source_lang, target_lang, domain）
+- [x] 调用 BackgroundTaskManager.submit_task()
+- [x] 返回 task_id、status、created_at
+
+**接口 2: GET `/api/tasks`**
+- [x] 支持分页参数 offset、limit
+- [x] 返回任务列表、total、has_more
+- [x] 支持无限滚动
+
+**接口 3: GET `/api/tasks/{task_id}`**
+- [x] 返回任务详情
+- [x] completed 状态时从文件读取翻译结果
+- [x] 包含 progress、error_message 等字段
+
+**接口 4: DELETE `/api/tasks/{task_id}`**
+- [x] 删除任务及其结果文件
+- [x] 返回 success 状态
+
+**接口 5: POST `/api/tasks/{task_id}/retry`**
+- [x] 调用 BackgroundTaskManager.retry_task()
+- [x] 返回 success 和新的 status
+
+**接口 6: GET `/api/tasks/stats`**
+- [x] 返回任务统计信息（总数、各状态数量、队列大小）
+
+**验收标准**:
+- ✅ 所有接口返回正确的 JSON 格式
+- ✅ 分页查询正常工作
+- ✅ 任务详情包含完整信息
+- ✅ 删除操作同时清理结果文件
+- ✅ 重试操作将失败任务重新加入队列
+- ✅ 统计接口返回准确数据
+
+**技术参考**:
+- 参考 plan.md 第 2.1 节的 API 规格
+
+**依赖项**:
+- 依赖 1.2 BackgroundTaskManager 完成
+- 依赖 1.3 TaskPersistenceService 完成
+- 依赖 1.4 CacheService 扩展完成
+
+---
+
+### 2.2 修改应用入口
+
+**状态**: ✅ 已完成
 **优先级**: 高
 **预计时间**: 1.5 小时
+**文件**: `backend/app.py`
 
 **任务描述**:
-定义翻译相关的请求/响应数据模型。
+修改 Flask 应用入口，集成后台任务服务
 
 **实现要点**:
-- [ ] 定义 TranslateRequest 模型 (content, url, title, domain)
-- [ ] 定义 TranslateResponse 模型 (task_id, original_content, translated_content, cost_usd)
-- [ ] 定义 NotionSyncRequest 模型 (task_id, title)
-- [ ] 定义 NotionSyncResponse 模型 (notion_page_url)
-- [ ] 定义 ResumeResponse 模型 (status, progress, partial_result)
-- [ ] 实现请求验证逻辑 (content 和 url 二选一)
+- [x] 导入并注册 `tasks_bp` 蓝图
+- [x] 应用启动时初始化 `TaskPersistenceService` 并恢复任务
+- [x] 应用启动时初始化 `BackgroundTaskManager`
+- [x] 添加 `DELETE` 到 CORS 允许方法
+- [x] 实现 `init_background_services()` 服务初始化函数
+- [x] 实现 `shutdown_background_services()` 服务关闭函数
+- [x] 启动时执行过期任务清理
 
 **验收标准**:
-- ✅ 所有模型有完整的类型注解
-- ✅ 请求验证逻辑正确
-- ✅ 可以序列化为 JSON
-
-**技术参考**:
-- 参考文件: plan.md 第 120-177 行 API 格式定义
+- ✅ tasks_bp 蓝图正确注册
+- ✅ 服务启动时自动恢复未完成任务
+- ✅ BackgroundTaskManager 在启动时初始化
+- ✅ CORS 支持 DELETE 方法
+- ✅ 过期任务清理正常执行
 
 **依赖项**:
-- Phase 1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
+- 依赖 2.1 任务路由创建完成
 
 ---
 
-### 3.3 实现语义分段服务 (chunking_service.py)
+## Phase 3: 前端改造
 
-**状态**: ⬜ 未开始
+**整体状态**: ✅ 已完成
+**依赖项**: Phase 2 API 完成
+**阶段目标**: 改造前端界面，支持后台任务管理和手动刷新
+
+### 3.1 前端路由方案
+
+**状态**: ✅ 已完成
 **优先级**: 高
-**预计时间**: 3 小时
-
-**任务描述**:
-实现基于语义边界的文本分段服务，支持长文翻译。
-
-**实现要点**:
-- [ ] 使用 tiktoken 进行 token 计数
-- [ ] 实现 split_by_semantic() 按语义分割
-- [ ] 按段落和标题边界分割
-- [ ] 控制每个 chunk 不超过 max_tokens (默认 8000)
-- [ ] 实现段落重叠保持上下文连贯 (overlap_sentences: 2)
-- [ ] 实现 _split_paragraphs() 辅助方法
-
-**验收标准**:
-- ✅ 正确按段落/标题分割文本
-- ✅ 每个 chunk 的 token 数不超过限制
-- ✅ 相邻 chunk 有重叠保持连贯性
-- ✅ 不会在段落中间断开
-
-**技术参考**:
-- 参考代码: plan.md 第 424-461 行 ChunkingService 示例
-- 参考文件: plan.md 第 247-252 行服务说明
-
-**依赖项**:
-- Phase 1 完成
-
-**潜在风险**:
-- ⚠️ 某些特殊格式文本可能导致分割不理想
-- ⚠️ tiktoken 模型编码可能需要与 Claude 匹配
-
----
-
-### 3.4 实现断点续传缓存服务 (cache_service.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 中
-**预计时间**: 3 小时
-
-**任务描述**:
-实现内存缓存服务，支持翻译任务的断点续传。
-
-**实现要点**:
-- [ ] 定义 TranslationTask 数据类
-- [ ] 实现 CacheService 类
-- [ ] 使用 threading.Lock 保证线程安全
-- [ ] 实现 create_task() 创建任务
-- [ ] 实现 get_task() 获取任务
-- [ ] 实现 update_progress() 更新进度
-- [ ] 实现 get_progress() 获取进度信息
-- [ ] 实现 _cleanup_expired() 清理过期任务
-- [ ] 支持 TTL 过期 (默认 30 分钟)
-- [ ] 支持最大条目限制 (默认 100)
-
-**验收标准**:
-- ✅ 可以创建和获取翻译任务
-- ✅ 进度更新正确
-- ✅ 过期任务自动清理
-- ✅ 线程安全
-
-**技术参考**:
-- 参考代码: plan.md 第 463-530 行 CacheService 示例
-- 参考文件: plan.md 第 253-258 行服务说明
-
-**依赖项**:
-- Phase 1 完成
-
-**潜在风险**:
-- ⚠️ 内存缓存在服务重启后丢失
-
----
-
-### 3.5 实现翻译服务层 (translation_service.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 4 小时
-
-**任务描述**:
-实现翻译服务层，协调 Agent、分段和缓存服务。
-
-**实现要点**:
-- [ ] 初始化 TranslatorAgent, ChunkingService, CacheService
-- [ ] 实现 translate() 同步翻译方法
-- [ ] 实现 translate_stream() 流式翻译方法
-- [ ] 实现长文自动分段处理
-- [ ] 实现翻译进度追踪
-- [ ] 实现条件性重试 (网络错误/速率限制)
-- [ ] 计算翻译成本 (token 数 * 单价)
-- [ ] 实现 resume_translate() 断点续传
-
-**验收标准**:
-- ✅ 短文直接翻译成功
-- ✅ 长文自动分段翻译
-- ✅ 流式翻译正确返回
-- ✅ 断点续传功能正常
-- ✅ 网络错误时自动重试
-
-**技术参考**:
-- 参考文件: plan.md 第 60-62 行服务层说明
-
-**依赖项**:
-- 任务 3.3, 3.4 完成
-- Phase 2 Agent 开发完成
-
-**潜在风险**:
-- ⚠️ 流式翻译与分段翻译的协调可能复杂
-
----
-
-### 3.6 实现健康检查路由 (health.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 低
 **预计时间**: 0.5 小时
 
 **任务描述**:
-实现简单的健康检查 API 端点。
+实现前端页面导航（采用状态管理方式替代 react-router-dom）
 
 **实现要点**:
-- [ ] 创建 health_bp Blueprint
-- [ ] 实现 GET /api/health 端点
-- [ ] 返回服务状态和版本信息
-- [ ] 可选：检查 Claude API 连接状态
+- [x] 使用 React useState 管理页面状态
+- [x] 实现 PageState 类型定义页面类型
+- [x] 实现页面切换导航函数
 
 **验收标准**:
-- ✅ GET /api/health 返回 200 和状态信息
-- ✅ 不需要认证
-
-**技术参考**:
-- 参考文件: plan.md 第 114 行 API 定义
-
-**依赖项**:
-- Phase 1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
+- ✅ 页面切换流畅
+- ✅ 无需额外安装依赖
+- ✅ 支持 home、stream、tasks、task-detail 四种页面
 
 ---
 
-### 3.7 实现翻译路由 (translate.py)
+### 3.2 添加类型定义
 
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 4 小时
-
-**任务描述**:
-实现翻译相关的 API 端点，包括同步翻译、流式翻译和断点续传。
-
-**实现要点**:
-- [ ] 创建 translate_bp Blueprint
-- [ ] 实现 POST /api/translate 同步翻译
-- [ ] 实现 POST /api/translate/stream 流式翻译 (SSE)
-- [ ] 实现 GET /api/translate/resume/{task_id} 断点续传查询
-- [ ] 应用 require_access_key 装饰器
-- [ ] 实现请求验证 (content/url 二选一)
-- [ ] 实现 SSE 响应格式
-- [ ] 错误处理和响应格式化
-
-**验收标准**:
-- ✅ 同步翻译接口正确返回翻译结果
-- ✅ 流式翻译接口正确返回 SSE 流
-- ✅ 断点续传查询返回正确的进度信息
-- ✅ 所有端点需要有效的 Access Key
-
-**技术参考**:
-- 参考文件: plan.md 第 115-177 行 API 格式定义
-- 参考文件: plan.md 第 259-265 行路由说明
-
-**依赖项**:
-- 任务 3.1, 3.2, 3.5 完成
-
-**潜在风险**:
-- ⚠️ SSE 流式响应需要正确设置响应头
-
----
-
-### 3.8 实现 Notion 同步路由 (notion.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 中
-**预计时间**: 2 小时
-
-**任务描述**:
-实现 Notion 同步 API 端点。
-
-**实现要点**:
-- [ ] 创建 notion_bp Blueprint
-- [ ] 实现 POST /api/notion/sync 端点
-- [ ] 从缓存获取翻译任务结果
-- [ ] 调用 NotionPublisher 发布页面
-- [ ] 应用 require_access_key 装饰器
-- [ ] 处理任务不存在的情况
-- [ ] 返回 Notion 页面 URL
-
-**验收标准**:
-- ✅ 可以将翻译结果同步到 Notion
-- ✅ 返回正确的 Notion 页面 URL
-- ✅ 任务不存在时返回适当错误
-
-**技术参考**:
-- 参考文件: plan.md 第 118, 146-162 行 API 定义
-
-**依赖项**:
-- 任务 3.1, 3.4 完成
-- 任务 2.4 Notion Publisher 完成
-
-**潜在风险**:
-- ⚠️ 需要确保缓存中的翻译结果格式正确
-
----
-
-### 3.9 实现 Flask 应用入口 (app.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 2 小时
-
-**任务描述**:
-实现 Flask 应用主入口，注册所有蓝图和中间件。
-
-**实现要点**:
-- [ ] 创建 Flask 应用实例
-- [ ] 加载配置到 app.config
-- [ ] 配置 CORS
-- [ ] 注册 health_bp 蓝图
-- [ ] 注册 translate_bp 蓝图
-- [ ] 注册 notion_bp 蓝图
-- [ ] 配置全局错误处理
-- [ ] 初始化服务实例
-
-**验收标准**:
-- ✅ Flask 应用可以正常启动
-- ✅ 所有路由正确注册
-- ✅ CORS 配置正确
-- ✅ 全局错误返回统一格式
-
-**技术参考**:
-- 参考文件: plan.md 第 49 行应用入口
-
-**依赖项**:
-- 任务 3.6, 3.7, 3.8 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-## Phase 4: React 前端开发 (预计 2-3 天)
-
-**整体状态**: ⬜ 未开始
-**依赖项**: Phase 3 基本完成 (API 可用)
-**阶段目标**: 实现完整的前端界面，包括翻译表单、结果展示和 Notion 同步
-
-### 4.1 初始化 React 项目
-
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 高
 **预计时间**: 1 小时
+**文件**: `frontend/src/types/index.ts`
 
 **任务描述**:
-使用 Vite 初始化 React 项目，配置 TypeScript 和 Tailwind CSS。
+添加任务相关的 TypeScript 类型定义
 
 **实现要点**:
-- [ ] 使用 `npm create vite@latest frontend -- --template react-ts` 创建项目
-- [ ] 安装 Tailwind CSS 和相关依赖
-- [ ] 配置 tailwind.config.js
-- [ ] 安装 @tailwindcss/typography 插件
-- [ ] 配置 vite.config.ts (代理后端 API)
-- [ ] 清理默认文件
+- [x] 定义 `TaskStatus` 类型
+- [x] 定义 `TaskListItem` 接口（轻量列表项）
+- [x] 定义 `TaskListResponse` 接口（分页响应）
+- [x] 定义 `TaskDetail` 接口（完整详情）
+- [x] 定义 `BackgroundTaskRequest` 接口
+- [x] 定义 `BackgroundTaskResponse` 接口
+- [x] 定义 `TaskStatsResponse` 接口
 
 **验收标准**:
-- ✅ `npm run dev` 成功启动开发服务器
-- ✅ Tailwind CSS 样式生效
-- ✅ TypeScript 编译无错误
-
-**技术参考**:
-- 参考文件: plan.md 第 299-308 行前端依赖
-
-**依赖项**:
-- 无
-
-**潜在风险**:
-- ⚠️ 无明显风险
+- ✅ 类型定义完整且正确
+- ✅ 无 TypeScript 编译错误
 
 ---
 
-### 4.2 实现类型定义 (types/index.ts)
+### 3.3 扩展 API 服务
 
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 高
-**预计时间**: 1 小时
-
-**任务描述**:
-定义前端使用的 TypeScript 类型。
-
-**实现要点**:
-- [ ] 定义 TranslateRequest 类型
-- [ ] 定义 TranslateResponse 类型
-- [ ] 定义 NotionSyncRequest 类型
-- [ ] 定义 NotionSyncResponse 类型
-- [ ] 定义 ResumeResponse 类型
-- [ ] 定义 Domain 枚举 ('tech' | 'business' | 'academic')
-- [ ] 定义 TranslationStatus 枚举
-
-**验收标准**:
-- ✅ 类型定义与后端 API 格式一致
-- ✅ TypeScript 编译无错误
-
-**技术参考**:
-- 参考文件: plan.md 第 120-177 行 API 格式定义
-
-**依赖项**:
-- 任务 4.1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 4.3 实现 API 服务层 (services/api.ts)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 3 小时
-
-**任务描述**:
-实现前端 API 调用层，封装所有后端接口调用。
-
-**实现要点**:
-- [ ] 配置 API 基础 URL
-- [ ] 实现 Access Key 请求头注入
-- [ ] 实现 translate() 同步翻译请求
-- [ ] 实现 translateStream() SSE 流式请求
-- [ ] 实现 resumeTranslate() 断点续传查询
-- [ ] 实现 syncToNotion() Notion 同步请求
-- [ ] 实现 healthCheck() 健康检查
-- [ ] 统一错误处理
-
-**验收标准**:
-- ✅ 所有 API 调用正确发送请求
-- ✅ Access Key 正确附加到请求头
-- ✅ SSE 流正确解析和处理
-- ✅ 错误响应正确处理
-
-**技术参考**:
-- 参考文件: plan.md 第 273-279 行 API 层说明
-
-**依赖项**:
-- 任务 4.2 完成
-
-**潜在风险**:
-- ⚠️ SSE 流处理需要特殊的 EventSource 或 fetch 处理
-
----
-
-### 4.4 实现领域选择器组件 (DomainSelector.tsx)
-
-**状态**: ⬜ 未开始
-**优先级**: 中
-**预计时间**: 1 小时
-
-**任务描述**:
-实现翻译领域选择组件。
-
-**实现要点**:
-- [ ] 定义组件 Props (value, onChange)
-- [ ] 展示三个领域选项 (技术/编程、商务/金融、学术研究)
-- [ ] 使用 Tailwind 样式美化
-- [ ] 支持键盘导航
-
-**验收标准**:
-- ✅ 正确显示三个领域选项
-- ✅ 选择状态正确切换
-- ✅ 样式美观
-
-**技术参考**:
-- 参考文件: plan.md 第 85 行组件定义
-
-**依赖项**:
-- 任务 4.1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 4.5 实现翻译表单组件 (TranslateForm.tsx)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 3 小时
-
-**任务描述**:
-实现主翻译表单组件，支持文本输入或 URL 输入。
-
-**实现要点**:
-- [ ] 实现输入模式切换 (文本/URL)
-- [ ] 文本模式：多行文本输入框
-- [ ] URL 模式：URL 输入框
-- [ ] 集成 DomainSelector 组件
-- [ ] 可选标题输入
-- [ ] 表单验证 (content/url 必填)
-- [ ] 提交按钮和加载状态
-- [ ] 使用 Tailwind 样式
-
-**验收标准**:
-- ✅ 可以切换输入模式
-- ✅ 表单验证正确
-- ✅ 提交时调用正确的 API
-- ✅ 加载状态正确显示
-
-**技术参考**:
-- 参考文件: plan.md 第 84 行组件定义
-
-**依赖项**:
-- 任务 4.3, 4.4 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 4.6 实现结果展示组件 (ResultDisplay.tsx)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 3 小时
-
-**任务描述**:
-实现翻译结果展示组件，支持双语段落交替格式。
-
-**实现要点**:
-- [ ] 解析翻译结果 (原文/译文段落)
-- [ ] 段落交替展示 (原文灰色背景，译文正常)
-- [ ] 支持 Markdown 渲染
-- [ ] 使用 @tailwindcss/typography 样式
-- [ ] 复制全文功能
-- [ ] 进度显示 (流式翻译时)
-
-**验收标准**:
-- ✅ 原文和译文段落交替显示
-- ✅ 视觉区分明显
-- ✅ Markdown 正确渲染
-- ✅ 复制功能正常
-
-**技术参考**:
-- 参考文件: plan.md 第 86 行组件定义
-
-**依赖项**:
-- 任务 4.1 完成
-
-**潜在风险**:
-- ⚠️ Markdown 渲染库选择 (可能需要 react-markdown)
-
----
-
-### 4.7 实现 Notion 同步按钮组件 (NotionSyncButton.tsx)
-
-**状态**: ⬜ 未开始
-**优先级**: 中
 **预计时间**: 1.5 小时
+**文件**: `frontend/src/services/api.ts`
 
 **任务描述**:
-实现 Notion 同步按钮组件。
+添加任务管理相关的 API 调用函数
 
 **实现要点**:
-- [ ] 定义组件 Props (taskId, title, disabled)
-- [ ] 实现点击同步逻辑
-- [ ] 加载状态显示
-- [ ] 成功后显示 Notion 页面链接
-- [ ] 错误处理和提示
+- [x] `submitBackgroundTask()` - 提交后台任务
+- [x] `getTaskList(offset, limit)` - 获取任务列表
+- [x] `getTaskDetail(taskId)` - 获取任务详情
+- [x] `deleteTask(taskId)` - 删除任务
+- [x] `retryTask(taskId)` - 重试失败任务
 
 **验收标准**:
-- ✅ 点击后正确调用同步 API
-- ✅ 加载状态正确显示
-- ✅ 成功后可以点击链接跳转到 Notion
-
-**技术参考**:
-- 参考文件: plan.md 第 87 行组件定义
-
-**依赖项**:
-- 任务 4.3 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
+- ✅ 所有 API 函数实现完整
+- ✅ 返回类型正确
+- ✅ 错误处理完善
 
 ---
 
-### 4.8 实现加载动画组件 (LoadingSpinner.tsx)
+### 3.4 改造首页
 
-**状态**: ⬜ 未开始
-**优先级**: 低
-**预计时间**: 0.5 小时
-
-**任务描述**:
-实现通用加载动画组件。
-
-**实现要点**:
-- [ ] 使用 Tailwind 动画
-- [ ] 支持不同尺寸
-- [ ] 可选加载文本
-
-**验收标准**:
-- ✅ 动画流畅
-- ✅ 尺寸可配置
-
-**依赖项**:
-- 任务 4.1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 4.9 实现应用入口 (App.tsx)
-
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 高
-**预计时间**: 2 小时
+**预计时间**: 3 小时
+**文件**: `frontend/src/pages/HomePage.tsx`
 
 **任务描述**:
-实现应用主入口组件，整合所有子组件。
+将首页改为上下结构，上方翻译表单，下方最近任务列表
 
 **实现要点**:
-- [ ] 布局设计 (header, main, footer)
-- [ ] Access Key 配置入口
-- [ ] 集成 TranslateForm
-- [ ] 集成 ResultDisplay
-- [ ] 集成 NotionSyncButton
-- [ ] 状态管理 (翻译结果、任务ID等)
-- [ ] 响应式设计
+- [x] 保留现有翻译表单功能
+- [x] 表单提交后调用 `submitBackgroundTask()`
+- [x] 添加最近任务列表（显示 10 条）
+- [x] 提交后自动刷新任务列表
+- [x] 任务项可点击跳转详情页
+- [x] 添加"查看全部任务"链接
+- [x] 活跃任务时自动每5秒刷新
 
 **验收标准**:
-- ✅ 完整的翻译工作流可用
-- ✅ 界面美观，响应式
-- ✅ 状态正确管理
-
-**技术参考**:
-- 参考文件: plan.md 第 83 行入口文件
+- ✅ 翻译表单正常工作
+- ✅ 提交后显示成功提示并刷新列表
+- ✅ 最近任务列表显示正确
+- ✅ 点击任务能跳转到详情页
+- ✅ "查看全部任务"链接正常工作
 
 **依赖项**:
-- 任务 4.4-4.8 完成
-
-**潜在风险**:
-- ⚠️ 状态管理可能需要 useReducer 或其他方案
+- 依赖 3.2 类型定义完成
+- 依赖 3.3 API 服务扩展完成
 
 ---
 
-### 4.10 实现全局样式 (styles/globals.css)
+### 3.5 创建任务列表页
 
-**状态**: ⬜ 未开始
-**优先级**: 低
-**预计时间**: 1 小时
-
-**任务描述**:
-配置 Tailwind 基础样式和自定义样式。
-
-**实现要点**:
-- [ ] 引入 Tailwind 指令
-- [ ] 自定义颜色变量
-- [ ] 自定义字体
-- [ ] 响应式断点调整
-- [ ] 暗色模式支持 (可选)
-
-**验收标准**:
-- ✅ Tailwind 样式正确生效
-- ✅ 整体风格统一
-
-**依赖项**:
-- 任务 4.1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-## Phase 5: Docker 化 (预计 1 天)
-
-**整体状态**: ⬜ 未开始
-**依赖项**: Phase 3, Phase 4 完成
-**阶段目标**: 完成项目的容器化部署配置
-
-### 5.1 创建 Dockerfile
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 2 小时
-
-**任务描述**:
-创建多阶段 Dockerfile，同时构建前端和后端。
-
-**实现要点**:
-- [ ] 基于 python:3.11-slim 镜像
-- [ ] 安装 Node.js 用于前端构建
-- [ ] 安装 Python 依赖
-- [ ] 构建前端静态文件
-- [ ] 复制后端代码
-- [ ] 配置启动命令
-- [ ] 优化镜像大小
-
-**验收标准**:
-- ✅ `docker build` 成功构建
-- ✅ 镜像大小合理 (<1GB)
-- ✅ 容器可以正常启动
-
-**技术参考**:
-- 参考代码: plan.md 第 672-701 行 Dockerfile 示例
-
-**依赖项**:
-- Phase 3, Phase 4 完成
-
-**潜在风险**:
-- ⚠️ Node.js 安装可能导致镜像较大
-
----
-
-### 5.2 创建 docker-compose.yml
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 1 小时
-
-**任务描述**:
-创建 Docker Compose 配置文件。
-
-**实现要点**:
-- [ ] 定义 translator 服务
-- [ ] 配置端口映射 (5000:5000)
-- [ ] 配置环境变量 (ANTHROPIC_API_KEY)
-- [ ] 配置配置文件挂载
-- [ ] 设置重启策略
-
-**验收标准**:
-- ✅ `docker-compose up` 成功启动
-- ✅ 服务可以正常访问
-
-**技术参考**:
-- 参考代码: plan.md 第 703-717 行 docker-compose 示例
-
-**依赖项**:
-- 任务 5.1 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 5.3 创建 .dockerignore
-
-**状态**: ⬜ 未开始
-**优先级**: 低
-**预计时间**: 0.5 小时
-
-**任务描述**:
-创建 Docker 构建忽略文件。
-
-**实现要点**:
-- [ ] 排除 __pycache__
-- [ ] 排除 .git
-- [ ] 排除 .env
-- [ ] 排除 node_modules
-- [ ] 排除文档文件
-
-**验收标准**:
-- ✅ 构建上下文不包含不必要的文件
-- ✅ 构建速度优化
-
-**技术参考**:
-- 参考代码: plan.md 第 719-732 行 .dockerignore 示例
-
-**依赖项**:
-- 无
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-## Phase 6: 集成测试 (预计 1 天)
-
-**整体状态**: ⬜ 未开始
-**依赖项**: Phase 1-5 完成
-**阶段目标**: 完成项目入口文件并进行端到端测试
-
-### 6.1 创建项目启动入口 (main.py)
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 1 小时
-
-**任务描述**:
-创建项目主启动入口文件。
-
-**实现要点**:
-- [ ] 加载环境变量
-- [ ] 加载配置文件
-- [ ] 初始化 Flask 应用
-- [ ] 配置静态文件服务 (前端构建产物)
-- [ ] 启动服务器
-
-**验收标准**:
-- ✅ `python main.py` 成功启动服务
-- ✅ API 和前端都可以访问
-
-**技术参考**:
-- 参考文件: plan.md 第 105 行入口文件
-
-**依赖项**:
-- Phase 3, Phase 4 完成
-
-**潜在风险**:
-- ⚠️ 无明显风险
-
----
-
-### 6.2 端到端功能测试
-
-**状态**: ⬜ 未开始
-**优先级**: 高
-**预计时间**: 4 小时
-
-**任务描述**:
-执行完整的端到端功能测试。
-
-**实现要点**:
-- [ ] 测试健康检查接口
-- [ ] 测试 Access Key 认证
-- [ ] 测试文本翻译功能
-- [ ] 测试 URL 抓取翻译
-- [ ] 测试三个领域翻译效果
-- [ ] 测试长文分段翻译
-- [ ] 测试流式翻译
-- [ ] 测试断点续传
-- [ ] 测试 Notion 同步
-- [ ] 测试前端完整流程
-
-**验收标准**:
-- ✅ 所有核心功能正常工作
-- ✅ 错误场景正确处理
-- ✅ 性能在可接受范围内
-
-**依赖项**:
-- 任务 6.1 完成
-- 需要有效的 API Key 进行测试
-
-**潜在风险**:
-- ⚠️ 可能发现需要修复的 Bug
-
----
-
-### 6.3 Docker 部署测试
-
-**状态**: ⬜ 未开始
+**状态**: ✅ 已完成
 **优先级**: 中
-**预计时间**: 2 小时
+**预计时间**: 3 小时
+**文件**: `frontend/src/pages/TaskListPage.tsx`
 
 **任务描述**:
-测试 Docker 容器化部署。
+创建独立的任务列表页面，支持无限滚动和任务管理
 
 **实现要点**:
-- [ ] 构建 Docker 镜像
-- [ ] 使用 docker-compose 启动
-- [ ] 测试所有功能在容器中正常工作
-- [ ] 测试配置文件挂载
-- [ ] 测试环境变量注入
+- [x] 创建页面组件
+- [x] 实现任务列表展示
+- [x] 实现无限滚动加载（使用 offset/limit）
+- [x] 显示任务状态标识
+- [x] 点击任务进入详情页
+- [x] 支持删除任务（带确认对话框）
+- [x] 添加手动刷新按钮
 
 **验收标准**:
-- ✅ Docker 容器成功启动
-- ✅ 所有功能在容器中正常工作
-- ✅ 配置可以通过挂载更新
+- ✅ 任务列表正确显示
+- ✅ 无限滚动正常工作
+- ✅ 删除前显示确认对话框
+- ✅ 删除后列表自动更新
+- ✅ 状态标识清晰可辨
 
 **依赖项**:
-- Phase 5 完成
-- 任务 6.2 完成
+- 依赖 3.2 类型定义完成
+- 依赖 3.3 API 服务扩展完成
 
-**潜在风险**:
-- ⚠️ 容器网络配置可能需要调整
+---
+
+### 3.6 创建任务详情页
+
+**状态**: ✅ 已完成
+**优先级**: 中
+**预计时间**: 3 小时
+**文件**: `frontend/src/pages/TaskDetailPage.tsx`
+
+**任务描述**:
+创建任务详情页面，展示任务信息、进度和结果
+
+**实现要点**:
+- [x] 创建页面组件
+- [x] 显示任务基本信息（ID、状态、创建时间等）
+- [x] 显示简单进度条（百分比）
+- [x] completed 状态显示翻译结果
+- [x] failed 状态显示错误信息
+- [x] 失败任务显示"重试"按钮
+- [x] 添加手动刷新按钮
+- [x] 添加返回列表的导航
+- [x] 进行中任务自动刷新
+
+**验收标准**:
+- ✅ 任务信息完整显示
+- ✅ 进度条正确反映 progress 值
+- ✅ 翻译结果正确显示
+- ✅ 错误信息正确显示
+- ✅ 重试功能正常工作
+- ✅ 手动刷新能更新数据
+
+**依赖项**:
+- 依赖 3.2 类型定义完成
+- 依赖 3.3 API 服务扩展完成
+
+---
+
+### 3.7 配置路由
+
+**状态**: ✅ 已完成
+**优先级**: 高
+**预计时间**: 1 小时
+**文件**: `frontend/src/App.tsx`
+
+**任务描述**:
+配置页面路由（采用状态管理方式）
+
+**实现要点**:
+- [x] 定义 PageType 和 PageState 类型
+- [x] 实现导航函数（navigateToHome, navigateToStream, navigateToTasks, navigateToTaskDetail）
+- [x] 使用 renderPageContent() 条件渲染页面
+- [x] 设置路由映射:
+  - `home` → 首页（表单 + 最近任务）
+  - `stream` → 实时翻译（原有流式翻译）
+  - `tasks` → 任务列表页（全部任务）
+  - `task-detail` → 任务详情页
+
+**验收标准**:
+- ✅ 路由正确匹配页面
+- ✅ 页面切换流畅
+
+**依赖项**:
+- 依赖 3.4、3.5、3.6 页面组件完成
+
+---
+
+### 3.8 更新导航组件
+
+**状态**: ✅ 已完成
+**优先级**: 低
+**预计时间**: 0.5 小时
+
+**任务描述**:
+在 Header 组件添加导航链接
+
+**实现要点**:
+- [x] 添加"后台任务"链接
+- [x] 添加"实时翻译"链接
+- [x] 添加"任务列表"链接
+- [x] 当前页面高亮显示
+
+**验收标准**:
+- ✅ 导航链接显示正确
+- ✅ 点击能正确跳转
+- ✅ 当前页面有视觉区分
+
+**依赖项**:
+- 依赖 3.7 路由配置完成
+
+---
+
+## Phase 4: Docker 配置
+
+**整体状态**: ✅ 已完成
+**依赖项**: Phase 1-3 完成
+**阶段目标**: 配置 Docker 以支持数据持久化
+
+### 4.1 修改 docker-compose.yml
+
+**状态**: ✅ 已完成
+**优先级**: 中
+**预计时间**: 0.5 小时
+**文件**: `docker-compose.yml`
+
+**任务描述**:
+添加数据目录挂载配置
+
+**实现要点**:
+- [x] 在 backend 服务添加 volumes 配置
+- [x] 挂载 `./data:/app/data`
+
+**验收标准**:
+- ✅ 容器内可以访问 /app/data 目录
+- ✅ 数据在容器重启后保留
+
+---
+
+### 4.2 修改 Dockerfile
+
+**状态**: ✅ 已完成
+**优先级**: 中
+**预计时间**: 0.5 小时
+**文件**: `Dockerfile`
+
+**任务描述**:
+在 Dockerfile 中创建数据目录
+
+**实现要点**:
+- [x] 添加 `RUN mkdir -p /app/data/results`
+
+**验收标准**:
+- ✅ 镜像构建成功
+- ✅ 容器启动时数据目录存在
 
 ---
 
 ## 技术工具清单
 
 ### 开发工具
-- [ ] Python 3.11+ - 后端运行时
-- [ ] Node.js 20+ - 前端构建
-- [ ] Docker & Docker Compose - 容器化部署
-- [ ] Git - 版本控制
+- [x] Python 3.x - 后端开发
+- [x] Node.js / npm - 前端开发
+- [x] Docker / Docker Compose - 容器化部署
 
-### Python 依赖库
-- [ ] claude-agent-sdk >= 0.1.0 - Claude Agent 核心
-- [ ] flask >= 3.0.0 - Web 框架
-- [ ] flask-cors >= 4.0.0 - CORS 支持
-- [ ] aiohttp >= 3.9.0 - 异步 HTTP
-- [ ] notion-client >= 2.0.0 - Notion API
-- [ ] beautifulsoup4 >= 4.12.0 - HTML 解析
-- [ ] html2text >= 2024.2.0 - HTML 转 Markdown
-- [ ] pyyaml >= 6.0.0 - YAML 配置
-- [ ] python-dotenv >= 1.0.0 - 环境变量
-- [ ] tiktoken >= 0.5.0 - Token 计数
-- [ ] requests >= 2.31.0 - HTTP 请求
+### 后端依赖库
+- [x] Flask - Web 框架
+- [x] threading - 多线程支持（标准库）
+- [x] queue - 线程安全队列（标准库）
+- [x] json - JSON 处理（标准库）
 
-### Node.js 依赖库
-- [ ] react ^18.2.0 - UI 框架
-- [ ] react-dom ^18.2.0 - React DOM
-- [ ] typescript ^5.3.0 - 类型支持
-- [ ] vite ^5.0.0 - 构建工具
-- [ ] tailwindcss ^3.4.0 - CSS 框架
-- [ ] @tailwindcss/typography ^0.5.0 - 排版插件
+### 前端依赖库
+- [x] React - UI 框架
+- [x] TypeScript - 类型支持
+- [x] 状态管理 - 使用 useState 替代 react-router-dom
 
 ### 配置文件
-- [ ] config/config.yaml - 主配置文件
-- [ ] .env - 环境变量 (不提交)
-- [ ] .env.example - 环境变量模板
-- [ ] tailwind.config.js - Tailwind 配置
-- [ ] vite.config.ts - Vite 配置
-- [ ] tsconfig.json - TypeScript 配置
+- [x] `data/tasks.json` - 任务持久化数据
+- [x] `data/results/*.txt` - 翻译结果文件
 
 ---
 
 ## 参考内容
 
-### 官方文档
-- [Claude Agent SDK 文档](https://docs.anthropic.com) - Agent 开发参考
-- [Notion API 文档](https://developers.notion.com) - Notion 集成
-- [Flask 文档](https://flask.palletsprojects.com) - 后端开发
-- [React 文档](https://react.dev) - 前端开发
-- [Tailwind CSS 文档](https://tailwindcss.com) - 样式开发
-
 ### 技术规范
-- 参考 plan.md 第 110-177 行 API 接口定义
-- 参考 plan.md 第 311-374 行配置文件格式
+- 参考 `background-translation-plan.md` 完整方案
 
-### 代码示例
-- TranslatorAgent: plan.md 第 380-422 行
-- ChunkingService: plan.md 第 424-461 行
-- CacheService: plan.md 第 463-530 行
-- DomainPrompts: plan.md 第 533-571 行
-- NotionPublisher: plan.md 第 573-646 行
-- AuthMiddleware: plan.md 第 649-666 行
-- Dockerfile: plan.md 第 672-701 行
+### 关键配置
+| 配置项 | 值 |
+|--------|-----|
+| 最大重试次数 | 3 次 |
+| 重试算法 | 指数退避（1s → 2s → 4s） |
+| Chunk 超时 | 5 分钟 |
+| 快照间隔 | 30 秒 |
+| 任务保留时间 | 7 天 |
+| 清理时机 | 服务启动时 |
 
 ---
 
 ## 注意事项
 
 ### 开发规范
-- ⚠️ 所有 Python 代码遵循 PEP 8 规范
-- ⚠️ TypeScript 代码启用严格模式
-- ⚠️ API 响应统一使用 JSON 格式
-- ⚠️ 敏感信息不得硬编码
+- ⚠️ 所有任务状态变更必须线程安全
+- ⚠️ 文件操作需要原子性保证
+- ⚠️ 大文本结果要存储到独立文件，避免内存膨胀
 
 ### 常见陷阱
-- ❌ Notion API Block 内容超过 2000 字符会报错：需要分割长段落
-- ❌ tiktoken 使用 gpt-4 编码可能与 Claude token 计数有差异：可接受的近似
-- ❌ SSE 流需要正确设置 Content-Type: text/event-stream
-- ❌ CORS 配置不当会导致前端请求失败
+- ❌ 直接在内存中保存翻译结果: 应写入文件后卸载
+- ❌ 忽略线程安全: 队列操作和状态更新需要锁
+- ❌ 硬编码超时时间: 应使用配置常量
 
 ### 最佳实践
-- ✅ 使用 dataclass 定义配置和数据模型
-- ✅ 使用 Blueprint 组织 Flask 路由
-- ✅ 使用 TypeScript 类型确保前后端数据一致
-- ✅ 使用 Tailwind 实现响应式设计
-
-### 性能优化
-- 🚀 长文翻译使用分段处理避免超时
-- 🚀 使用流式翻译提升用户体验
-- 🚀 缓存服务避免重复翻译
-- 🚀 Docker 多阶段构建减小镜像体积
+- ✅ 使用指数退避重试，避免 API 过载
+- ✅ 状态变更立即持久化，防止数据丢失
+- ✅ 优雅关闭，等待当前任务完成
+- ✅ 日志记录关键事件便于调试
 
 ### 测试要求
-- 🧪 API 接口手动测试覆盖所有端点
-- 🧪 翻译功能测试三个领域
-- 🧪 Notion 同步测试页面格式
-- 🧪 Docker 部署测试完整流程
+- 🧪 后台执行测试: 提交任务 → 关闭浏览器 → 重新打开 → 查看结果
+- 🧪 持久化测试: 提交任务 → 重启服务 → 验证任务恢复
+- 🧪 重试机制测试: 模拟 API 失败 → 验证指数退避重试
+- 🧪 手动重试测试: 失败任务 → 点击重试 → 验证重新执行
+- 🧪 过期清理测试: 创建测试任务 → 修改时间戳 → 触发清理
+- 🧪 大文本测试: 提交大文本 → 验证内存卸载正常
+- 🧪 无限滚动测试: 创建多个任务 → 验证分页加载
 
 ---
 
 ## 进度追踪
 
 ### 总体进度
-- 总任务数: 32
-- 已完成: 0 (0%)
+- 总任务数: 16
+- 已完成: 16 (100%)
 - 进行中: 0
-- 未开始: 32
+- 未开始: 0
 - 阻塞中: 0
 
-### 本周计划
-- [ ] Phase 1: 项目初始化 (1.1 - 1.5)
-- [ ] Phase 2: Agent 核心开发开始 (2.1 - 2.2)
-
-### 本周完成
-- (暂无)
+### 已完成任务
+- [x] 1.1 创建数据目录
+- [x] 1.2 创建 BackgroundTaskManager
+- [x] 1.3 创建 TaskPersistenceService
+- [x] 1.4 扩展 CacheService
+- [x] 2.1 创建任务管理路由
+- [x] 2.2 修改应用入口
+- [x] 3.1 前端路由方案
+- [x] 3.2 添加类型定义
+- [x] 3.3 扩展 API 服务
+- [x] 3.4 改造首页
+- [x] 3.5 创建任务列表页
+- [x] 3.6 创建任务详情页
+- [x] 3.7 配置路由
+- [x] 3.8 更新导航组件
+- [x] 4.1 修改 docker-compose.yml
+- [x] 4.2 修改 Dockerfile
 
 ### 遇到的问题
-(暂无)
+（无）
 
-### 下周计划
-- [ ] 完成 Phase 2: Agent 核心开发
-- [ ] 开始 Phase 3: Flask 后端开发
+---
+
+## 实现摘要
+
+### 后端实现
+| 文件 | 说明 |
+|------|------|
+| `backend/services/task_manager.py` | 后台任务管理器，含队列、工作线程、重试机制 |
+| `backend/services/task_persistence.py` | 任务持久化服务，含快照、恢复、清理 |
+| `backend/services/cache_service.py` | 扩展了列表查询、统计、状态管理方法 |
+| `backend/routes/tasks.py` | 6个 RESTful API 接口 |
+| `backend/app.py` | 集成后台服务初始化和关闭 |
+
+### 前端实现
+| 文件 | 说明 |
+|------|------|
+| `frontend/src/pages/HomePage.tsx` | 首页：表单 + 最近任务列表 |
+| `frontend/src/pages/TaskListPage.tsx` | 任务列表页：分页、删除、刷新 |
+| `frontend/src/pages/TaskDetailPage.tsx` | 任务详情页：进度、结果、重试 |
+| `frontend/src/services/api.ts` | 任务管理 API 调用函数 |
+| `frontend/src/types/index.ts` | 任务相关类型定义 |
+| `frontend/src/App.tsx` | 状态管理路由、导航集成 |
+| `frontend/src/components/TranslateForm.tsx` | 支持 mode 属性切换模式 |
+
+### Docker 配置
+| 文件 | 修改 |
+|------|------|
+| `docker-compose.yml` | 添加 `./data:/app/data` 卷挂载 |
+| `Dockerfile` | 添加 `RUN mkdir -p /app/data/results` |
+
+---
+
+*文档最后更新: 2026-01-08*
+*项目状态: ✅ 100% 完成*

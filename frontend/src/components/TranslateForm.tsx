@@ -14,12 +14,15 @@ interface TranslateFormProps {
   }) => void;
   isLoading: boolean;
   disabled?: boolean;
+  /** Mode: 'stream' for SSE streaming, 'background' for background task */
+  mode?: 'stream' | 'background';
 }
 
 export function TranslateForm({
   onSubmit,
   isLoading,
   disabled = false,
+  mode = 'stream',
 }: TranslateFormProps) {
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [content, setContent] = useState('');
@@ -70,7 +73,10 @@ export function TranslateForm({
       <div className="flex rounded-lg border border-gray-200 overflow-hidden">
         <button
           type="button"
-          onClick={() => setInputMode('text')}
+          onClick={() => {
+            setInputMode('text');
+            setErrors([]);
+          }}
           className={`
             flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors
             ${
@@ -86,7 +92,10 @@ export function TranslateForm({
         </button>
         <button
           type="button"
-          onClick={() => setInputMode('url')}
+          onClick={() => {
+            setInputMode('url');
+            setErrors([]);
+          }}
           className={`
             flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors
             ${
@@ -173,23 +182,25 @@ export function TranslateForm({
         disabled={isFormDisabled}
       />
 
-      {/* Notion 同步复选框 */}
-      <div className="flex items-center gap-3 py-2">
-        <input
-          type="checkbox"
-          id="syncToNotion"
-          checked={syncToNotion}
-          onChange={(e) => setSyncToNotion(e.target.checked)}
-          disabled={isFormDisabled}
-          className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
-        />
-        <label
-          htmlFor="syncToNotion"
-          className="text-sm font-medium text-gray-700 cursor-pointer select-none"
-        >
-          翻译完成后自动同步到 Notion
-        </label>
-      </div>
+      {/* Notion 同步复选框 - 仅在 stream 模式下显示 */}
+      {mode === 'stream' && (
+        <div className="flex items-center gap-3 py-2">
+          <input
+            type="checkbox"
+            id="syncToNotion"
+            checked={syncToNotion}
+            onChange={(e) => setSyncToNotion(e.target.checked)}
+            disabled={isFormDisabled}
+            className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
+          />
+          <label
+            htmlFor="syncToNotion"
+            className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+          >
+            翻译完成后自动同步到 Notion
+          </label>
+        </div>
+      )}
 
       {/* Errors */}
       {errors.length > 0 && (
@@ -218,12 +229,12 @@ export function TranslateForm({
         {isLoading ? (
           <>
             <LoadingSpinner size="sm" />
-            翻译中...
+            {mode === 'background' ? '提交中...' : '翻译中...'}
           </>
         ) : (
           <>
             <Send className="w-5 h-5" />
-            开始翻译
+            {mode === 'background' ? '提交任务' : '开始翻译'}
           </>
         )}
       </button>
