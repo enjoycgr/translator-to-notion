@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Callable, Any
 
+from config.settings import AppConfig, get_config
 from backend.services.cache_service import (
     CacheService,
     get_cache_service,
@@ -74,17 +75,17 @@ class BackgroundTaskManager:
 
     Configuration:
     - MAX_RETRY_COUNT: Maximum retry attempts per chunk (3)
-    - CHUNK_TIMEOUT_SECONDS: Timeout for each chunk translation (300s / 5min)
+    - CHUNK_TIMEOUT_SECONDS: Timeout for each chunk translation (from config.agent.timeout)
     """
 
     # Configuration constants
     MAX_RETRY_COUNT = 3
-    CHUNK_TIMEOUT_SECONDS = 300  # 5 minutes
 
     def __init__(
         self,
         cache_service: Optional[CacheService] = None,
         translation_executor: Optional[Callable] = None,
+        config: Optional[AppConfig] = None,
     ):
         """
         Initialize the background task manager.
@@ -94,9 +95,14 @@ class BackgroundTaskManager:
                           Uses singleton if not provided.
             translation_executor: Callable for executing translations.
                                  Should accept (content, domain, context) and return translated text.
+            config: Application configuration. Uses default if not provided.
         """
+        self._config = config or get_config()
         self._cache = cache_service or get_cache_service()
         self._translation_executor = translation_executor
+
+        # Get timeout from configuration
+        self.CHUNK_TIMEOUT_SECONDS = self._config.agent.timeout
 
         # Task queue (thread-safe, unlimited capacity)
         self._task_queue: queue.Queue[BackgroundTask] = queue.Queue()

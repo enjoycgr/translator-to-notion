@@ -64,7 +64,7 @@ class AsyncLoopManager:
 _loop_manager = AsyncLoopManager()
 
 
-def _run_async_generator_sync(async_gen):
+def _run_async_generator_sync(async_gen, timeout: int = 300):
     """
     Run async generator in sync context for Flask.
 
@@ -72,6 +72,7 @@ def _run_async_generator_sync(async_gen):
 
     Args:
         async_gen: Async generator to run.
+        timeout: Timeout in seconds for each iteration.
 
     Yields:
         Values from the async generator.
@@ -85,7 +86,7 @@ def _run_async_generator_sync(async_gen):
         while True:
             try:
                 future = asyncio.run_coroutine_threadsafe(get_next(), loop)
-                value = future.result(timeout=300)  # 5分钟超时
+                value = future.result(timeout=timeout)
                 yield value
             except StopAsyncIteration:
                 break
@@ -154,7 +155,8 @@ def translate_stream():
                 domain=req.domain,
                 sync_to_notion=req.sync_to_notion,
             )
-            for sse_string in _run_async_generator_sync(async_gen):
+            timeout = service.config.agent.timeout
+            for sse_string in _run_async_generator_sync(async_gen, timeout=timeout):
                 yield sse_string
 
         return Response(
@@ -219,7 +221,8 @@ def translate_agent():
                 prompt=prompt,
                 domain=domain,
             )
-            for sse_string in _run_async_generator_sync(async_gen):
+            timeout = service.config.agent.timeout
+            for sse_string in _run_async_generator_sync(async_gen, timeout=timeout):
                 yield sse_string
 
         return Response(
