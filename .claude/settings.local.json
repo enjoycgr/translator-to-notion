@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go test -v ./internal/domain/parser/field_strategies/user -run TestJingModule)",
+      "Bash(go test:*)",
+      "Bash(tee:*)",
+      "Bash(git log:*)"
+    ],
+    "defaultMode": "bypassPermissions"
+  }
+}

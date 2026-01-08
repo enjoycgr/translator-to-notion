@@ -1,0 +1,70 @@
+# ===========================================
+# Translation Agent System - Docker Compose
+# ===========================================
+# Production deployment configuration
+#
+# Usage:
+#   docker-compose up -d --build     # Build and start
+#   docker-compose logs -f           # View logs
+#   docker-compose down              # Stop and remove
+#
+# For local development, use: uv run python main.py
+
+services:
+  translator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: translation-agent
+    ports:
+      - "${SERVER_PORT:-5000}:5000"
+
+    environment:
+      # ===== Required =====
+      # Claude API Key (get from https://console.anthropic.com)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+
+      # ===== Optional: Custom API Endpoint =====
+      # Useful for proxies or self-hosted endpoints
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
+
+      # ===== Optional: Notion Integration =====
+      # Get from https://www.notion.so/my-integrations
+      - NOTION_API_KEY=${NOTION_API_KEY:-}
+      - NOTION_PARENT_PAGE_ID=${NOTION_PARENT_PAGE_ID:-}
+
+      # ===== Optional: Authentication =====
+      # Comma-separated list of API access keys
+      - ACCESS_KEYS=${ACCESS_KEYS:-ak_default_key}
+
+      # ===== Server Configuration =====
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=5000
+      - DEBUG=${DEBUG:-false}
+
+      # ===== Agent Configuration =====
+      - AGENT_MODEL=${AGENT_MODEL:-claude-opus-4-5-20251101}
+      - AGENT_TIMEOUT=${AGENT_TIMEOUT:-300}
+
+    volumes:
+      # Mount config file for runtime customization (read-only)
+      - ./config/config.yaml:/app/config/config.yaml:ro
+
+    restart: unless-stopped
+
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,90 @@
+# ===========================================
+# Translation Agent System Configuration
+# ===========================================
+# This is the main configuration file for the Translation Agent System.
+# Copy this file to config.yaml and customize as needed.
+# Sensitive values should be set via environment variables (see .env.example)
+
+translation:
+  # Translation direction (fixed: English to Chinese)
+  source_language: "en"
+  target_language: "zh-CN"
+
+  # Preset domain templates
+  # Each domain has specialized prompts for better translation quality
+  domains:
+    tech:
+      name: "技术/编程"
+      prompt_modifier: |
+        请使用专业的技术术语，保留代码块和技术名词原文。
+        对于常见技术名词（如 Container, Microservice）可以在首次出现时标注原文。
+        保持代码示例的格式和缩进。
+        使用准确的中文技术术语（如 "容器" 而非 "箱子"）。
+
+    business:
+      name: "商务/金融"
+      prompt_modifier: |
+        请使用正式、专业的商务用语。
+        准确翻译金融术语（如 ROI, EBITDA 等保留缩写并在首次标注中文）。
+        保持数据、图表说明的准确性。
+        注意商务礼仪用语的文化适配。
+
+    academic:
+      name: "学术研究"
+      prompt_modifier: |
+        请保持学术论文的严谨性和客观性。
+        准确翻译专业术语，首次出现时可标注原文。
+        保留引用格式（如 APA、MLA）。
+        保持摘要、方法论、结论等部分的学术写作风格。
+
+  # Long text chunking strategy
+  chunking:
+    strategy: "semantic"           # Splitting strategy: semantic (by paragraphs/headings)
+    max_chunk_tokens: 8000         # Maximum tokens per chunk
+    overlap_sentences: 2           # Overlap sentences between chunks for context
+
+  # Retry strategy for API calls
+  retry:
+    max_attempts: 3                # Maximum retry attempts
+    retry_on:                      # Conditions to retry on
+      - "network_error"
+      - "rate_limit"
+    backoff_multiplier: 2          # Exponential backoff multiplier
+    initial_delay_ms: 1000         # Initial delay in milliseconds
+
+# Cache configuration for checkpoint/resume feature
+cache:
+  type: "memory"                   # Cache type (only memory supported currently)
+  ttl_minutes: 30                  # Time-to-live for cached translations
+  max_entries: 100                 # Maximum number of cached entries
+
+# Notion integration settings
+# API key and parent page ID should be set via environment variables
+notion:
+  api_key: ""                      # Set via NOTION_API_KEY env var
+  parent_page_id: ""               # Set via NOTION_PARENT_PAGE_ID env var
+
+  # Metadata to include in Notion pages
+  metadata:
+    include_source_url: true       # Include link to original article
+    include_domain: true           # Include translation domain
+    include_translate_time: false  # Include translation timestamp
+    include_cost: false            # Include API cost information
+
+# Authentication settings
+# Access keys should be set via ACCESS_KEYS environment variable
+auth:
+  access_keys:
+    - "ak_default_development_key"  # Replace in production!
+
+# Claude Agent settings
+agent:
+  model: "claude-sonnet-4-20250514"  # Claude model to use
+  max_turns: 10                       # Maximum conversation turns
+  timeout: 300                        # Timeout in seconds
+
+# Flask server settings
+server:
+  host: "0.0.0.0"                  # Listen on all interfaces
+  port: 5000                       # Server port
+  debug: false                     # Debug mode (set to false in production)

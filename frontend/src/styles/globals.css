@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+}
+
+/* Loading animation */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded hover:bg-gray-400;
+}
+
+/* Bilingual display styles */
+.bilingual-content blockquote {
+  @apply bg-gray-100 border-l-4 border-gray-300 px-4 py-2 my-2 text-gray-600 text-sm;
+}
+
+.bilingual-content blockquote + p {
+  @apply text-gray-800 my-2;
+}
+
+/* SSE Stream text animation */
+.stream-text::after {
+  content: '▋';
+  @apply animate-pulse;
+}
