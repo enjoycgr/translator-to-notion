@@ -32,10 +32,13 @@ class NotionPublisher:
     - Interleaved paragraph format (original as quote, translation as paragraph)
     - Metadata support (source URL, domain, timestamp)
     - Automatic text splitting for long content (Notion 2000 char limit)
+    - Batch block creation to handle Notion's 100 blocks per request limit
     """
 
     # Notion block text content limit
     MAX_BLOCK_TEXT_LENGTH = 2000
+    # Notion API limit: max blocks per request
+    MAX_BLOCKS_PER_REQUEST = 100
 
     def __init__(self, api_key: str, parent_page_id: str):
         """
@@ -90,7 +93,11 @@ class NotionPublisher:
             )
             blocks.extend(content_blocks)
 
-            # Create the page
+            # Split blocks into batches (Notion API limit: 100 blocks per request)
+            first_batch = blocks[:self.MAX_BLOCKS_PER_REQUEST]
+            remaining_blocks = blocks[self.MAX_BLOCKS_PER_REQUEST:]
+
+            # Create the page with first batch of blocks
             page = self.client.pages.create(
                 parent={"page_id": self.parent_page_id},
                 properties={
@@ -98,19 +105,33 @@ class NotionPublisher:
                         "title": [{"text": {"content": title}}]
                     }
                 },
-                children=blocks,
+                children=first_batch,
             )
+
+            page_id = page.get("id")
+
+            # Append remaining blocks in batches
+            while remaining_blocks:
+                batch = remaining_blocks[:self.MAX_BLOCKS_PER_REQUEST]
+                remaining_blocks = remaining_blocks[self.MAX_BLOCKS_PER_REQUEST:]
+
+                self.client.blocks.children.append(
+                    block_id=page_id,
+                    children=batch,
+                )
 
             return PublishResult(
                 success=True,
                 page_url=page.get("url"),
-                page_id=page.get("id"),
+                page_id=page_id,
             )
 
         except APIResponseError as e:
+            # APIResponseError uses 'body' dict, not 'message' attribute
+            error_msg = e.body.get("message", str(e)) if hasattr(e, "body") and e.body else str(e)
             return PublishResult(
                 success=False,
-                error=f"Notion API error: {e.message}",
+                error=f"Notion API error: {error_msg}",
             )
         except Exception as e:
             return PublishResult(
