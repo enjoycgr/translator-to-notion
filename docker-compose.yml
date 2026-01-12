@@ -43,7 +43,7 @@ services:
       - DEBUG=${DEBUG:-false}
 
       # ===== Agent Configuration =====
-      - AGENT_MODEL=${AGENT_MODEL:-claude-sonnet-4-20250514}
+      - AGENT_MODEL=${AGENT_MODEL:-claude-sonnet-4-5-20250929}
       - AGENT_TIMEOUT=${AGENT_TIMEOUT:-3000}
     volumes:
       # Mount config file for runtime customization (read-only)
