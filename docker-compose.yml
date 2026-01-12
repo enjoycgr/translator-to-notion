@@ -43,8 +43,8 @@ services:
       - DEBUG=${DEBUG:-false}
 
       # ===== Agent Configuration =====
-      - AGENT_MODEL=${AGENT_MODEL:-claude-opus-4-5-20251101}
-      - AGENT_TIMEOUT=${AGENT_TIMEOUT:-300}
+      - AGENT_MODEL=${AGENT_MODEL:-claude-sonnet-4-20250514}
+      - AGENT_TIMEOUT=${AGENT_TIMEOUT:-3000}
     volumes:
       # Mount config file for runtime customization (read-only)
       - ./config/config.yaml:/app/config/config.yaml:ro
