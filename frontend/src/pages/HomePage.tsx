@@ -91,6 +91,7 @@ export function HomePage({ onSelectTask, onViewAllTasks }: HomePageProps) {
     url?: string;
     title?: string;
     domain: Domain;
+    syncToNotion?: boolean;
   }) => {
     if (!data.content && !data.url) {
       return;
@@ -105,6 +106,7 @@ export function HomePage({ onSelectTask, onViewAllTasks }: HomePageProps) {
         url: data.url,
         title: data.title,
         domain: data.domain,
+        sync_to_notion: data.syncToNotion,
       });
 
       if (response.success && response.data) {

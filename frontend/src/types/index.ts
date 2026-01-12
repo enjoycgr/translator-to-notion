@@ -55,6 +55,7 @@ export interface BackgroundTaskRequest {
   domain: Domain;
   source_lang?: string;
   target_lang?: string;
+  sync_to_notion?: boolean;
 }
 
 // API Response types

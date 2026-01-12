@@ -182,25 +182,23 @@ export function TranslateForm({
         disabled={isFormDisabled}
       />
 
-      {/* Notion 同步复选框 - 仅在 stream 模式下显示 */}
-      {mode === 'stream' && (
-        <div className="flex items-center gap-3 py-2">
-          <input
-            type="checkbox"
-            id="syncToNotion"
-            checked={syncToNotion}
-            onChange={(e) => setSyncToNotion(e.target.checked)}
-            disabled={isFormDisabled}
-            className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
-          />
-          <label
-            htmlFor="syncToNotion"
-            className="text-sm font-medium text-gray-700 cursor-pointer select-none"
-          >
-            翻译完成后自动同步到 Notion
-          </label>
-        </div>
-      )}
+      {/* Notion 同步复选框 */}
+      <div className="flex items-center gap-3 py-2">
+        <input
+          type="checkbox"
+          id="syncToNotion"
+          checked={syncToNotion}
+          onChange={(e) => setSyncToNotion(e.target.checked)}
+          disabled={isFormDisabled}
+          className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 cursor-pointer"
+        />
+        <label
+          htmlFor="syncToNotion"
+          className="text-sm font-medium text-gray-700 cursor-pointer select-none"
+        >
+          翻译完成后自动同步到 Notion
+        </label>
+      </div>
 
       {/* Errors */}
       {errors.length > 0 && (
