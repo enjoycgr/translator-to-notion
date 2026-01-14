@@ -153,6 +153,9 @@ temp/
 *.tmp
 *.temp
 
+# Claude Code temporary files
+tmpclaude-*
+
 # Docker
 .docker/
 
